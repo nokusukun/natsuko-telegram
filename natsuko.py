@@ -113,7 +113,8 @@ class NatsukoClient():
     def api_gen(self, endpoint, **kwa):
         apiq = "{}{}?".format(self.APIL, endpoint)
         for arg, val in kwa.items():
-            apiq += "{}={}&".format(arg, val)
+            if val != None:
+                apiq += "{}={}&".format(arg, val)
         return apiq[:-1]
 
 
@@ -127,3 +128,39 @@ class NatsukoClient():
         message = urllib.parse.quote_plus(message)
         apiq = self.api_gen("sendMessage", text=message, chat_id=chat_id)
         self._api_send(apiq)
+
+
+    def forward_message(self, target_cid, source_cid, 
+                    message_id, disable_notification=None):
+        apiq = self.api_gen("forwardMessage", 
+                            chat_id=target_cid,
+                            from_chat_id=source_cid,
+                            message_id=message_id,
+                            disable_notification=disable_notification)
+
+        self._api_send(apiq)
+
+
+    def send_image(self, chat_id, photo=None, caption=None, 
+                    disable_notification=None, reply=None, reply_markup=None):
+        # response = requests.post('http://httpbin.org/post', files=dict(foo='bar'))
+        if type(photo) is str:
+            apiq = self.api_gen("sendPhoto", 
+                                chat_id=chat_id, 
+                                photo=photo, 
+                                caption=caption, 
+                                disable_notification=disable_notification, 
+                                reply=reply, 
+                                reply_markup=reply_markup)
+            return self._api_send(apiq)
+
+        else:
+            apiq = self.api_gen("sendPhoto", 
+                                chat_id=chat_id, 
+                                caption=caption, 
+                                disable_notification=disable_notification, 
+                                reply=reply, 
+                                reply_markup=reply_markup)
+
+            response = requests.post(apiq, files=dict(photo=photo))
+            return response.content.decode("utf8")
