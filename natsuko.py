@@ -5,6 +5,8 @@ import time
 import urllib.parse
 from dotmap import DotMap
 
+from models.event import Event
+
 
 class UpdateManager():
     
@@ -83,10 +85,12 @@ class NatsukoClient():
 
                 if "bot_command" in [x["type"] for x in raw_command.message.entities]:
                     print("Identified as Bot Command")
+
+                    # Gets the bot_command entity
                     e = [x for x in raw_command.message.entities if x["type"] == "bot_command"][0]
                     command = raw_command.message.text[e.offset + 1: e.offset + e.length]
                     if command in self.commands:
-                        self.commands[command]["function"](raw_command)
+                        self.commands[command]["function"](Event(self, raw_command))
 
             while self.manager.queue_empty:
                 time.sleep(0.5)
@@ -112,11 +116,11 @@ class NatsukoClient():
             apiq += "{}={}&".format(arg, val)
         return apiq[:-1]
 
+
     def _api_send(self, apiq):
         response = requests.get(apiq)
         content = response.content.decode("utf8")
         return content
-
 
 
     def send_message(self, chat_id, message):

@@ -5,7 +5,7 @@ client = NatsukoClient(settings.TOKEN)
 
 @client.command("hello")
 def hello_command(event):
-    client.send_message(event.message.chat.id, "Hello to you as well.")
+    event.reply("Don't hello me you nigger.")
 
 
 client.run()
