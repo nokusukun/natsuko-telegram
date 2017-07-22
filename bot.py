@@ -10,7 +10,10 @@ def hello_command(event):
 
 @client.command("image")
 def image_command(event):
+
     with open('testimage.jpg', 'rb') as f:
-        client.send_image(event.message.chat.id, f, "it's a test photo")
+        client.send_photo(event.message.chat.id, f, 
+                            caption="it's a test photo")
+        client.send_message()
 
 client.run()
