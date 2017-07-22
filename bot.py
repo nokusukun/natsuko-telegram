@@ -1,5 +1,6 @@
 from natsuko import NatsukoClient
 import settings
+import yaml
 
 client = NatsukoClient(settings.TOKEN)
 
@@ -10,10 +11,20 @@ def hello_command(event):
 
 @client.command("image")
 def image_command(event):
-
+    client.send_chat_action(event.message.chat.id, 'upload_photo')
     with open('testimage.jpg', 'rb') as f:
         client.send_photo(event.message.chat.id, f, 
                             caption="it's a test photo")
-        client.send_message()
+
+@client.command("info")
+def chat_info(event):
+    client.send_chat_action(event.message.chat.id, "typing")
+    channel = event.message.text[6:]
+    x = client.get_chat(channel)
+    #f = client.get_file(x["photo"]["big_file_id"])
+    client.send_photo(event.message.chat.id, x["photo"]["big_file_id"])
+    event.reply(yaml.dump(x))
+
+
 
 client.run()

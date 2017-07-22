@@ -73,6 +73,8 @@ class NatsukoClient():
         self.manager = None
         self.com_proc_running = False
 
+        self.usercache = {}
+
     def run(self):
         self.manager = UpdateManager(token=self.token, callback=self.process, poll_timeout=100)
         self.process()
@@ -85,16 +87,29 @@ class NatsukoClient():
                 raw_command = self.manager.get_command()
 
                 if "bot_command" in [x["type"] for x in raw_command.message.entities]:
-                    print("Identified as Bot Command")
-
                     # Gets the bot_command entity
                     e = [x for x in raw_command.message.entities if x["type"] == "bot_command"][0]
                     command = raw_command.message.text[e.offset + 1: e.offset + e.length]
+                    print("Identified as Bot Command: {}".format(command))
                     if command in self.commands:
                         self.commands[command]["function"](Event(self, raw_command))
 
-            while self.manager.queue_empty:
-                time.sleep(0.5)
+                print(raw_command)
+
+                if "message" in raw_command and not raw_command.message.keys():
+                    if not raw_command.message["from"]["username"] in self.usercache:
+                        self.usercache[raw_command.message["from"]["username"]] = raw_command.message["from"]
+
+                elif "inline_query" in raw_command:
+                    if not raw_command.inline_query["from"]["username"] in self.usercache:
+                        self.usercache[raw_command.inline_query["from"]["username"]] = raw_command.inline_query["from"]
+
+                elif "chat" in raw_command:
+                    if not raw_command.chat["from"]["username"] in self.usercache:
+                        self.usercache[raw_command.chat["from"]["username"]] = raw_command.chat["from"]
+
+            
+            time.sleep(0.5)
 
 
     # Command Decorator
@@ -122,11 +137,12 @@ class NatsukoClient():
 
 
     def _api_send(self, apiq):
+        print("APISEND: {}".format(apiq))
         response = requests.get(apiq)
         content = response.content.decode("utf8")
         content = json.loads(content)
         if not content["ok"]:
-            raise APIError(content["error_code"], content["descrption"])
+            raise APIError(content)
         return content["result"]
 
 
@@ -210,10 +226,20 @@ class NatsukoClient():
         reply = kwarg.get("reply")
         reply_markup = kwarg.get("reply_markup")
 
-        if type(photo) is str:
+        if type(photo) is str and not photo.startswith("http"):
             apiq = self.api_gen("sendPhoto", 
                                 chat_id=chat_id, 
                                 photo=photo, 
+                                caption=caption, 
+                                disable_notification=disable_notification, 
+                                reply_to_message_id=reply, 
+                                reply_markup=reply_markup)
+            return self._api_send(apiq)
+
+        elif photo.startswith("http"):
+            apiq = self.api_gen("sendPhoto", 
+                                chat_id=chat_id, 
+                                photo=urllib.parse.quote(photo), 
                                 caption=caption, 
                                 disable_notification=disable_notification, 
                                 reply_to_message_id=reply, 
@@ -317,7 +343,7 @@ class NatsukoClient():
         if type(document) is str:
             apiq = self.api_gen("sendDocument", 
                                 chat_id=chat_id, 
-                                audio=document, 
+                                document=document, 
                                 caption=caption,
                                 disable_notification=disable_notification, 
                                 reply_to_message_id=reply, 
@@ -636,8 +662,12 @@ class NatsukoClient():
     def get_file(self, file_id):
         apiq = self.api_gen("getFile", 
                             file_id=file_id)
-        result = self._api_send(apiq)["result"]
+        result = self._api_send(apiq)
         return DotMap(result)
+
+
+    def get_file_url(self, file_obj):
+        return "https://api.telegram.org/file/bot{}/{}".format(self.token, file_obj.file_path)
 
 
     def ban_chat_memeber(self, chat_id, user_id, until_date=None):
