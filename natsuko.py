@@ -94,7 +94,6 @@ class NatsukoClient():
                     if command in self.commands:
                         self.commands[command]["function"](Event(self, raw_command))
 
-                print(raw_command)
 
                 if "message" in raw_command and not raw_command.message.keys():
                     if not raw_command.message["from"]["username"] in self.usercache:

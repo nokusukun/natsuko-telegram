@@ -21,7 +21,6 @@ def chat_info(event):
     client.send_chat_action(event.message.chat.id, "typing")
     channel = event.message.text[6:]
     x = client.get_chat(channel)
-    #f = client.get_file(x["photo"]["big_file_id"])
     client.send_photo(event.message.chat.id, x["photo"]["big_file_id"])
     event.reply(yaml.dump(x))
 
