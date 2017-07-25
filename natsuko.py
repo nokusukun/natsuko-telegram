@@ -8,6 +8,8 @@ from dotmap import DotMap
 from models.event import Event
 from models.errors import APIError
 import asyncio
+import aiohttp
+import traceback
 
 class UpdateManager():
 
@@ -16,6 +18,7 @@ class UpdateManager():
         self.loop = kwargs.get("loop")
         self.token = kwargs.get("token")
         self.poll_timeout = kwargs.get("poll_timeout")
+
         self.URL = f"https://api.telegram.org/bot{self.token}/"
 
         self.last_update = None
@@ -28,6 +31,7 @@ class UpdateManager():
         #loop.start()
         #print("Done")
 
+        self.session = aiohttp.ClientSession(loop=self.loop)
 
     def get_command(self):
 
@@ -39,34 +43,35 @@ class UpdateManager():
         return DotMap(command)
 
 
-    async def update_loop(self, future):
+    async def update_loop(self):
         print("Starting Poll Update Loop")
 
         while True:
-            await self.poll_updates(future, self.last_update)
+            await self.poll_updates(self.last_update)
 
-    async def poll_updates(self, future, offset=None):
+    async def poll_updates(self, offset=None):
+
+        url = self.URL + f"getUpdates?timeout={self.poll_timeout}"
+        if offset:
+            url += f"&offset={offset}"
 
         try:
-            url = self.URL + f"getUpdates?timeout={self.poll_timeout}"
+            async with self.session.get(url) as resp:
+                data = await resp.text()
+                js = json.loads(data)["result"]
 
-            if offset:
-                url += f"&offset={offset}"
+                if not js:
+                    return
 
-            response = requests.get(url).content.decode("utf8")
-            js = json.loads(response)["result"]
-            print(js)
-            self.command_queue.extend(js)
-            self.last_update = max(x["update_id"] for x in js) + 1
-            print(f"Poll Successful: {self.last_update}")
-            self.queue_empty = False
+                self.command_queue.extend(js)
+                self.last_update = max(x["update_id"] for x in js) + 1
+                self.queue_empty = False
+                print(f"Poll Successful: {self.last_update}")   
 
-            print(self.queue_empty)
-
-            future.set_result(' ')
 
         except Exception as e:
-            print(e)
+                print(f"exception: {e}")
+                traceback.print_exc()
 
         finally:
             await asyncio.sleep(0.5)
@@ -75,7 +80,7 @@ class UpdateManager():
 
 class NatsukoClient():
 
-    def __init__(self, token):
+    def __init__(self, token, **kwargs):
         self.token = token
         self.poll_timeout = 100
         self.commands = {}
@@ -86,54 +91,51 @@ class NatsukoClient():
         self.com_proc_running = False
 
         self.usercache = {}
-
         self.loop = asyncio.get_event_loop()
+        self.manager = UpdateManager(token=self.token, loop=self.loop, poll_timeout=100)
+
 
     def run(self):
 
-        self.manager = UpdateManager(token=self.token, loop=self.loop, poll_timeout=100)
+        self.loop.run_until_complete(self._run())
 
-        future = asyncio.Future()
+    async def _run(self):
 
-        asyncio.ensure_future(self.manager.update_loop(future))
-        self.loop.run_until_complete(future)
+        task = asyncio.ensure_future(self.manager.update_loop())
+        await self.process()
+        await task
 
-        self.loop.run_until_complete(self.process())
 
     async def process(self):
 
         while True:
-            print("process")
             if not self.manager.queue_empty:
-                print("True")
-
                 raw_command = self.manager.get_command()
 
-                if "bot_command" in [x["type"] for x in raw_command.message.entities]:
+                for entity in raw_command.message.entities:
+                    if "bot_command" in entity['type']:
 
-                    # Gets the bot_command entity
-                    e = [x for x in raw_command.message.entities if x["type"] == "bot_command"][0]
-                    command = raw_command.message.text[e.offset + 1: e.offset + e.length]
+                        # Gets the bot_command entity
+                        command = raw_command.message.text[entity.offset + 1: entity.offset + entity.length]
+                        print(f"Identified as Bot Command: {command}")
+                        if command in self.commands:
+                            func = self.commands[command]["function"]
+                            func(Event(self, raw_command))
 
-                    print(f"Identified as Bot Command: {command}")
-                    if command in self.commands:
-                        self.commands[command]["function"](Event(self, raw_command))
-
+                username = raw_command.message["from"]["username"]
 
                 if "message" in raw_command and not raw_command.message.keys():
-                    if not raw_command.message["from"]["username"] in self.usercache:
-                        self.usercache[raw_command.message["from"]["username"]] = raw_command.message["from"]
+                    if not username in self.usercache:
+                        self.usercache[username] = raw_command.message["from"]
 
                 elif "inline_query" in raw_command:
-                    if not raw_command.inline_query["from"]["username"] in self.usercache:
-                        self.usercache[raw_command.inline_query["from"]["username"]] = raw_command.inline_query["from"]
+                    if not username in self.usercache:
+                        self.usercache[username] = raw_command.inline_query["from"]
 
                 elif "chat" in raw_command:
-                    if not raw_command.chat["from"]["username"] in self.usercache:
-                        self.usercache[raw_command.chat["from"]["username"]] = raw_command.chat["from"]
+                    if not username in self.usercache:
+                        self.usercache[username] = raw_command.chat["from"]
 
-            else:
-                print("queue empty")
 
             await asyncio.sleep(0.5)
 
@@ -242,7 +244,7 @@ class NatsukoClient():
         return self._api_send(apiq)
 
 
-    def send_photo(self, chat_id, photo, **kwarg):
+    def send_photo(self, chat_id, photo, **kwargs):
         """Use this method to send photos. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
 
@@ -261,10 +263,10 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwarg.get("caption")
-        disable_notification = kwarg.get("disable_notification")
-        reply = kwarg.get("reply")
-        reply_markup = kwarg.get("reply_markup")
+        caption = kwargs.get("caption")
+        disable_notification = kwargs.get("disable_notification")
+        reply = kwargs.get("reply")
+        reply_markup = kwargs.get("reply_markup")
 
         if type(photo) is str and not photo.startswith("http"):
             apiq = self.api_gen("sendPhoto",
@@ -277,7 +279,7 @@ class NatsukoClient():
 
             return self._api_send(apiq)
 
-        elif photo.startswith("http"):
+        elif type(photo) is str and photo.startswith("http"):
             apiq = self.api_gen("sendPhoto",
                                 chat_id=chat_id,
                                 photo=urllib.parse.quote(photo),
