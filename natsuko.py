@@ -96,7 +96,7 @@ class NatsukoClient():
         self.loop = asyncio.get_event_loop()
         self.manager = UpdateManager(token=self.token, loop=self.loop, poll_timeout=100, callback=self.process)
 
-        self._PROCESS_RUNNING = False
+        self._process_lock = asyncio.Lock(loop=self.loop)
 
 
     def run(self):
@@ -113,12 +113,12 @@ class NatsukoClient():
     async def process(self):
         print(f"Callback Called: {self}")
 
-        if not self._PROCESS_RUNNING:
-            self._PROCESS_RUNNING = True
-            while not self.manager.queue_empty:
-                raw_command = self.manager.get_command()
-                self.parse_command(raw_command)
-            self._PROCESS_RUNNING = False
+        if not self._process_lock.locked():
+
+            with (await self._process_lock):
+                while not self.manager.queue_empty:
+                    raw_command = self.manager.get_command()
+                    self.parse_command(raw_command)
 
 
     def parse_command(self, raw_command):
