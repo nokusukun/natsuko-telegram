@@ -7,7 +7,7 @@ client = NatsukoClient(settings.TOKEN)
 @client.command("hello")
 async def hello_command(event):
     # event.reply("Don't hello me you nigger.")
-    await client.send_message(event.message.chat.id, "dont hello me you nigglet.")
+    await event.reply("dont hello me you nigglet.")
 
 @client.command("image")
 async def image_command(event):

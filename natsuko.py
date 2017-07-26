@@ -119,32 +119,35 @@ class NatsukoClient():
 
             while not self.manager.queue_empty:
                 raw_command = self.manager.get_command()
-
-                for entity in raw_command.message.entities:
-                    if "bot_command" in entity['type']:
-
-                        # Gets the bot_command entity
-                        command = raw_command.message.text[entity.offset + 1: entity.offset + entity.length]
-                        print(f"Identified as Bot Command: {command}")
-                        if command in self.commands:
-                            func = self.commands[command]["function"]
-                            asyncio.ensure_future(func(Event(self, raw_command)))
-
-                username = raw_command.message["from"]["username"]
-
-                if "message" in raw_command and not raw_command.message.keys():
-                    if not username in self.usercache:
-                        self.usercache[username] = raw_command.message["from"]
-
-                elif "inline_query" in raw_command:
-                    if not username in self.usercache:
-                        self.usercache[username] = raw_command.inline_query["from"]
-
-                elif "chat" in raw_command:
-                    if not username in self.usercache:
-                        self.usercache[username] = raw_command.chat["from"]
+                self.parse_command(raw_command)
 
             self._PROCESS_RUNNING = False
+
+
+    def parse_command(self, raw_command):
+        for entity in raw_command.message.entities:
+            if "bot_command" in entity['type']:
+
+                # Gets the bot_command entity
+                command = raw_command.message.text[entity.offset + 1: entity.offset + entity.length]
+                print(f"Identified as Bot Command: {command}")
+                if command in self.commands:
+                    func = self.commands[command]["function"]
+                    asyncio.ensure_future(func(Event(self, raw_command)))
+
+        username = raw_command.message["from"]["username"]
+
+        if "message" in raw_command and not raw_command.message.keys():
+            if not username in self.usercache:
+                self.usercache[username] = raw_command.message["from"]
+
+        elif "inline_query" in raw_command:
+            if not username in self.usercache:
+                self.usercache[username] = raw_command.inline_query["from"]
+
+        elif "chat" in raw_command:
+            if not username in self.usercache:
+                self.usercache[username] = raw_command.chat["from"]
 
 
 

@@ -27,13 +27,13 @@ class Event():
 		return [self.message.text[x.offset: x.offset+x.length] for x in self.message.entities if x["type"] == t]
 
 
-	def reply(self, message):
-		return self.client.send_message(self.chat.id, message)
+	async def reply(self, message):
+		return await self.client.send_message(self.chat.id, message)
 
 
-	def reply_photo(self, photo):
-		return self.client.send_photo(self.chat.id, photo)
+	async def reply_photo(self, photo):
+		return await self.client.send_photo(self.chat.id, photo)
 
 
-	def forward(self, chat_id):
-		return self.client.forward_message(chat_id, self.chat.id, self.message.message_id)
+	async def forward(self, chat_id):
+		return await self.client.forward_message(chat_id, self.chat.id, self.message.message_id)
