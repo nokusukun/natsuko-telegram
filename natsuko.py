@@ -15,7 +15,9 @@ class UpdateManager():
 
 
     def __init__(self, **kwargs):
-        self.loop = kwargs.get("loop")
+        self.loop = asyncio.get_event_loop()
+
+        self.session = kwargs.get("session")
         self.token = kwargs.get("token")
         self.poll_timeout = kwargs.get("poll_timeout")
         self.callback = kwargs.get("callback")
@@ -32,7 +34,6 @@ class UpdateManager():
         #loop.start()
         #print("Done")
 
-        self.session = aiohttp.ClientSession(loop=self.loop)
 
     def get_command(self):
 
@@ -89,12 +90,15 @@ class NatsukoClient():
 
         self.API_URL = f"https://api.telegram.org/bot{self.token}/"
 
+
         self.manager = None
         self.com_proc_running = False
 
         self.usercache = {}
+
         self.loop = asyncio.get_event_loop()
-        self.manager = UpdateManager(token=self.token, loop=self.loop, poll_timeout=100, callback=self.process)
+        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.manager = UpdateManager(token=self.token, session=self.session, poll_timeout=100, callback=self.process)
 
         self._process_lock = asyncio.Lock(loop=self.loop)
 
@@ -106,7 +110,6 @@ class NatsukoClient():
     async def _run(self):
 
         task = asyncio.ensure_future(self.manager.update_loop())
-        # await self.process()
         await task
 
 
@@ -114,7 +117,6 @@ class NatsukoClient():
         print(f"Callback Called: {self}")
 
         if not self._process_lock.locked():
-
             with (await self._process_lock):
                 while not self.manager.queue_empty:
                     raw_command = self.manager.get_command()
@@ -181,15 +183,13 @@ class NatsukoClient():
     async def _api_send(self, apiq):
         print(f"APISEND: {apiq}")
 
-        fut = self.loop.run_in_executor(None, requests.get, apiq)
-        response = await fut
-        content = response.content.decode("utf8")
-        content = json.loads(content)
+        async with self.session.get(apiq) as resp:
+            content = await resp.json()
 
-        if not content["ok"]:
-            raise APIError(content)
+            if not content["ok"]:
+                raise APIError(content)
 
-        return content["result"]
+            return content["result"]
 
 
     async def send_message(self, chat_id, message, **kwarg):
