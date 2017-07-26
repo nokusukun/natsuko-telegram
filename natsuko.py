@@ -13,9 +13,9 @@ class UpdateManager():
     
 
     def __init__(self, **kwa):
-        self.callback = kwa["callback"]
-        self.token = kwa["token"]
-        self.poll_timeout = kwa["poll_timeout"]
+        self.callback = kwa.get("callback")
+        self.token = kwa.get("token")
+        self.poll_timeout = kwa.get("poll_timeout")
         self.URL = "https://api.telegram.org/bot{}/".format(self.token)
 
         self.last_update = None
