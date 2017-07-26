@@ -124,14 +124,17 @@ class NatsukoClient():
 
 
     def parse_command(self, raw_command):
+
         for entity in raw_command.message.entities:
             if "bot_command" in entity['type']:
 
                 # Gets the bot_command entity
                 command = raw_command.message.text[entity.offset + 1: entity.offset + entity.length]
+
                 print(f"Identified as Bot Command: {command}")
                 if command in self.commands:
                     func = self.commands[command]["function"]
+
                     asyncio.ensure_future(func(Event(self, raw_command)))
 
         username = raw_command.message["from"]["username"]
@@ -184,7 +187,9 @@ class NatsukoClient():
         print(f"APISEND: {apiq}")
 
         async with self.session.get(apiq) as resp:
-            content = await resp.json()
+            data = await resp.json()
+
+            content = json.loads(data)
 
             if not content["ok"]:
                 raise APIError(content)
