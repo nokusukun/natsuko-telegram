@@ -114,13 +114,10 @@ class NatsukoClient():
         print(f"Callback Called: {self}")
 
         if not self._PROCESS_RUNNING:
-
             self._PROCESS_RUNNING = True
-
             while not self.manager.queue_empty:
                 raw_command = self.manager.get_command()
                 self.parse_command(raw_command)
-
             self._PROCESS_RUNNING = False
 
 
