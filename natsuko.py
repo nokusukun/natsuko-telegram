@@ -5,7 +5,7 @@ import time
 import urllib.parse
 from dotmap import DotMap
 
-from models.event import Event
+from models.event import Event, Message
 from models.errors import APIError
 import asyncio
 import aiohttp
@@ -125,6 +125,7 @@ class NatsukoClient():
 
     def parse_command(self, raw_command):
 
+        message = Message(self, raw_command.message)
         for entity in raw_command.message.entities:
             if "bot_command" in entity['type']:
 
@@ -187,9 +188,7 @@ class NatsukoClient():
         print(f"APISEND: {apiq}")
 
         async with self.session.get(apiq) as resp:
-            data = await resp.json()
-
-            content = json.loads(data)
+            content = await resp.json()
 
             if not content["ok"]:
                 raise APIError(content)
