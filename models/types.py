@@ -78,7 +78,8 @@ class Message(MasterType):
                     "chat": ("chat", Chat)}
         super().__init__(client, data, data_map)
 
-        self.entities = [Entity(client, self.text, e) for e in self.data.entities]
+        self.entities = [MessageEntity(client, self.text, e) for e in self.data.entities]
+        self.id = self.message_id
 
 
     # could this be a generator?
@@ -90,7 +91,7 @@ class Message(MasterType):
 
 
 
-class Entity(MasterType):
+class MessageEntity(MasterType):
 
     __slots__ = ['text', 'type', 'offset', 'length', 'bot_command']
 
@@ -98,6 +99,7 @@ class Entity(MasterType):
         super().__init__(client, data)
 
         self.text = text[self.offset: self.offset + self.length]
+        self.clean_text = self.text[1:]
         self.bot_command = self.type == 'bot_command'
 
 
