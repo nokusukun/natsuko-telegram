@@ -118,11 +118,12 @@ class Chat(MasterType):
         super().__init__(client, data)
 
 
-    async def send_message(self, message):
+    async def send_message(self, message, **kwargs):
         # reply and reply_photo could probably be a single
         # method, with an if type()...I think
 
         return await self.client.send_message(self.id, message)
+
 
     async def reply_photo(self, photo):
         return await self.client.send_photo(self.id, photo)

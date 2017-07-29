@@ -169,17 +169,17 @@ class NatsukoClient():
         return deco
 
 
-    def api_gen(self, endpoint, **kwa):
+    def api_gen(self, endpoint, **kwargs):
 
         apiq = f"{self.API_URL}{endpoint}?"
 
-        for arg, val in kwa.items():
-            if val != None:
-                apiq += f"{arg}={val}&"
+        for arg, value in kwargs.items():
+            if value != None:   
+                apiq += f"{arg}={value}&"
 
-            elif type(val) is dict:
-                val = urllib.parse.quote_plus(val)
-                apiq += f"{arg}={val}&"
+            elif isinstance(val, dict):
+                value = urllib.parse.quote_plus(value)
+                apiq += f"{arg}={value}&"
 
         return apiq[:-1]
 
@@ -196,7 +196,7 @@ class NatsukoClient():
             return content["result"]
 
 
-    async def send_message(self, chat_id, message, **kwarg):
+    async def send_message(self, chat_id, message, **kwargs):
         """
             Use this method to send text messages. On success, the sent Message is returned.
             (Optional parameters are keyword arguments)
@@ -315,7 +315,7 @@ class NatsukoClient():
             return json.loads(response.content.decode("utf8"))
 
 
-    async def send_audio(self, chat_id, audio, **kwarg):
+    async def send_audio(self, chat_id, audio, **kwargs):
         """Use this method to send audio, if you want Telegram clients to display them in the music
         player. Your audio must be in the .mp3 format. On success, the sent Message is returned.
         Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the
@@ -377,7 +377,7 @@ class NatsukoClient():
             return response.content.decode("utf8")
 
 
-    async def send_document(self, chat_id, document, **kwarg):
+    async def send_document(self, chat_id, document, **kwargs):
         """Use this method to send documents.  Bots can currently send files of any type of up to 50 MB
         in size, this limit may be changed in the future. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
@@ -425,7 +425,7 @@ class NatsukoClient():
             return response.content.decode("utf8")
 
 
-    async def send_video(self, chat_id, video, **kwarg):
+    async def send_video(self, chat_id, video, **kwargs):
         """Use this method to send videos. Telegram clients support mp4 videos
         (other formats may be sent as Document). On success, the sent Message is returned.
         Bots can currently send video files of up to 50 MB in size, this limit may be changed
@@ -487,7 +487,7 @@ class NatsukoClient():
             return response.content.decode("utf8")
 
 
-    async def send_voice(self, chat_id, voice, **kwarg):
+    async def send_voice(self, chat_id, voice, **kwargs):
         """Use this method to send voice files. if you want Telegram clients to display the file as a
         playable voice message. For this to work, your audio must be in an .ogg file encoded with OPUS
         (other formats may be sent as Audio or Document). On success, the sent Message is returned.
@@ -541,7 +541,7 @@ class NatsukoClient():
             return response.content.decode("utf8")
 
 
-    async def send_video_note(self, chat_id, v_note, **kwarg):
+    async def send_video_note(self, chat_id, v_note, **kwargs):
         """As of v.4.0, Telegram clients support rounded square mp4 videos of up to 1 minute long.
         Use this method to send video messages. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
@@ -590,7 +590,7 @@ class NatsukoClient():
             return response.content.decode("utf8")
 
 
-    async def send_location(self, chat_id, long_, lat, **kwarg):
+    async def send_location(self, chat_id, long_, lat, **kwargs):
         """Use this method to send point on the map. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
 
@@ -621,7 +621,7 @@ class NatsukoClient():
         return await self._api_send(apiq)
 
 
-    async def send_venue(self, chat_id, long_, title, address, lat, **kwarg):
+    async def send_venue(self, chat_id, long_, title, address, lat, **kwargs):
         """Use this method to send information about a venue. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
 
@@ -656,7 +656,7 @@ class NatsukoClient():
         return await self._api_send(apiq)
 
 
-    async def send_contact(self, chat_id, phone_number, first_name, **kwarg):
+    async def send_contact(self, chat_id, phone_number, first_name, **kwargs):
         """Use this method to send information about a venue. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
 
@@ -723,7 +723,7 @@ class NatsukoClient():
         return await self._api_send(apiq)
 
 
-    async def get_user_profile_photos(self, user_id, **kwarg):
+    async def get_user_profile_photos(self, user_id, **kwargs):
         """Use this method to get a list of profile pictures for a user.
         Returns a UserProfilePhotos Dictionary.
         (Optional parameters are keyword arguments)
@@ -778,7 +778,7 @@ class NatsukoClient():
         return await self._api_send(apiq)
 
 
-    async def restrict_chat_memeber(self, chat_id, user_id, **kwarg):
+    async def restrict_chat_memeber(self, chat_id, user_id, **kwargs):
 
         apiq = self.api_gen("restrictChatMember",
                             chat_id=chat_id,
@@ -792,7 +792,7 @@ class NatsukoClient():
         return await self._api_send(apiq)
 
 
-    async def promote_chat_memeber(self, chat_id, user_id, **kwarg):
+    async def promote_chat_memeber(self, chat_id, user_id, **kwargs):
 
         apiq = self.api_gen("promoteChatMember",
                             chat_id=chat_id,
@@ -852,7 +852,7 @@ class NatsukoClient():
         return await self._api_send(apiq)
 
 
-    async def pin_chat_message(self, chat_id, message_id, **kwarg):
+    async def pin_chat_message(self, chat_id, message_id, **kwargs):
 
         apiq = self.api_gen("pinChatMessage",
                             chat_id=chat_id,
@@ -904,7 +904,8 @@ class NatsukoClient():
 
     # Updating Messages
 
-    async def edit_message_text(self, text, **kwarg):
+    async def edit_message_text(self, text, **kwargs):
+
         apiq = self.api_gen("editMessageText",
                             chat_id=kwarg.get("chat_id"),
                             message_id=kwarg.get("message_id"),
@@ -912,33 +913,36 @@ class NatsukoClient():
                             text=text,
                             parse_mode=kwarg.get("parse_mode"),
                             disable_web_page_preview=kwarg.get("disable_web_page_preview"),
-                            reply_markup=kwarg.get("reply_markup")) 
+                            reply_markup=kwarg.get("reply_markup"))
 
         return await self._api_send(apiq)
 
 
-    async def edit_message_caption(self, caption, **kwarg):
+    async def edit_message_caption(self, caption, **kwargs):
+
         apiq = self.api_gen("editMessageCaption",
                             chat_id=kwarg.get("chat_id"),
                             message_id=kwarg.get("message_id"),
                             inline_message_id=kwarg.get("inline_message_id"),
                             caption=caption,
-                            reply_markup=kwarg.get("reply_markup")) 
+                            reply_markup=kwarg.get("reply_markup"))
 
         return await self._api_send(apiq)
 
 
-    async def edit_message_reply_markup(self, markup, **kwarg):
+    async def edit_message_reply_markup(self, markup, **kwargs):
+
         apiq = self.api_gen("editMessageReplyMarkup",
                             chat_id=kwarg.get("chat_id"),
                             message_id=kwarg.get("message_id"),
                             inline_message_id=kwarg.get("inline_message_id"),
-                            reply_markup=markup) 
-        
+                            reply_markup=markup)
+
         return await self._api_send(apiq)
 
 
     async def delete_message(self, chat_id, message_id):
+
         apiq = self.api_gen("deleteMessage",
                             chat_id=chat_id,
                             message_id=message_id)
