@@ -902,3 +902,46 @@ class NatsukoClient():
 
         return await self._api_send(apiq)
 
+    # Updating Messages
+
+    async def edit_message_text(self, text, **kwarg):
+        apiq = self.api_gen("editMessageText",
+                            chat_id=kwarg.get("chat_id"),
+                            message_id=kwarg.get("message_id"),
+                            inline_message_id=kwarg.get("inline_message_id"),
+                            text=text,
+                            parse_mode=kwarg.get("parse_mode"),
+                            disable_web_page_preview=kwarg.get("disable_web_page_preview"),
+                            reply_markup=kwarg.get("reply_markup")) 
+
+        return await self._api_send(apiq)
+
+
+    async def edit_message_caption(self, caption, **kwarg):
+        apiq = self.api_gen("editMessageCaption",
+                            chat_id=kwarg.get("chat_id"),
+                            message_id=kwarg.get("message_id"),
+                            inline_message_id=kwarg.get("inline_message_id"),
+                            caption=caption,
+                            reply_markup=kwarg.get("reply_markup")) 
+
+        return await self._api_send(apiq)
+
+
+    async def edit_message_reply_markup(self, markup, **kwarg):
+        apiq = self.api_gen("editMessageReplyMarkup",
+                            chat_id=kwarg.get("chat_id"),
+                            message_id=kwarg.get("message_id"),
+                            inline_message_id=kwarg.get("inline_message_id"),
+                            reply_markup=markup) 
+        
+        return await self._api_send(apiq)
+
+
+    async def delete_message(self, chat_id, message_id):
+        apiq = self.api_gen("deleteMessage",
+                            chat_id=chat_id,
+                            message_id=message_id)
+
+        return await self._api_send(apiq)
+

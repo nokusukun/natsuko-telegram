@@ -136,4 +136,3 @@ class User(MasterType):
     def __str__(self):
         return f"(User) | id: {self.id}, username: {self.username}"
 
-
