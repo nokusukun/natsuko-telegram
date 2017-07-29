@@ -46,6 +46,11 @@ class MasterType():
         else:
             self.__dict__[attr] = self.data.get(attr)
 
+    def __str__(self):
+    	d = ", ".join([f"{x}={self.__dict__[x]}" for x in self.__slots__ if x in self.__dict__])
+    	t = str(type(self))[8:-2]
+    	return f'({t}): [{d}]'
+
 
 class Event(MasterType):
 
@@ -113,10 +118,6 @@ class Chat(MasterType):
         super().__init__(client, data)
 
 
-    def __str__(self):
-        return f"(Chat) | id: {self.id}, title: {self.title}, type: {self.type}"
-
-
     async def send_message(self, message):
         # reply and reply_photo could probably be a single
         # method, with an if type()...I think
@@ -135,6 +136,9 @@ class User(MasterType):
     def __init__(self, client, data):
         super().__init__(client, data)
 
-    def __str__(self):
-        return f"(User) | id: {self.id}, username: {self.username}"
 
+class PhotoSize(MasterType):
+	__slots__ = ['id', 'width', 'height', 'file_size']
+
+	def __init__(self, client, data):
+		super().__init__(client, data)
