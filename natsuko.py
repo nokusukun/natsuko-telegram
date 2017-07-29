@@ -5,7 +5,7 @@ import time
 import urllib.parse
 from dotmap import DotMap
 
-from models.event import Event, Message
+from models.types import Event, Message
 from models.errors import APIError
 import asyncio
 import aiohttp
