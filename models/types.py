@@ -46,6 +46,11 @@ class MasterType():
         else:
             self.__dict__[attr] = self.data.get(attr)
 
+    def __str__(self):
+    	d = ", ".join([f"{x}={self.__dict__[x]}" for x in self.__slots__ if x in self.__dict__])
+    	t = str(type(self))[8:-2]
+    	return f'<{t}>: ({d})'
+
 
 class Event(MasterType):
 
@@ -78,7 +83,8 @@ class Message(MasterType):
                     "chat": ("chat", Chat)}
         super().__init__(client, data, data_map)
 
-        self.entities = [Entity(client, self.text, e) for e in self.data.entities]
+        self.entities = [MessageEntity(client, self.text, e) for e in self.data.entities]
+        self.id = self.message_id
 
 
     # could this be a generator?
@@ -90,14 +96,15 @@ class Message(MasterType):
 
 
 
-class Entity(MasterType):
+class MessageEntity(MasterType):
 
-    __slots__ = ['text', 'type', 'offset', 'length', 'bot_command']
+    __slots__ = ['text', 'type', 'offset', 'length', 'bot_command', 'clean_text']
 
     def __init__(self, client, text, data):
         super().__init__(client, data)
 
         self.text = text[self.offset: self.offset + self.length]
+        self.clean_text = self.text[1:]
         self.bot_command = self.type == 'bot_command'
 
 
@@ -109,10 +116,6 @@ class Chat(MasterType):
 
     def __init__(self, client, data):
         super().__init__(client, data)
-
-
-    def __str__(self):
-        return f"(Chat) | id: {self.id}, title: {self.title}, type: {self.type}"
 
 
     async def send_message(self, message):
@@ -133,6 +136,9 @@ class User(MasterType):
     def __init__(self, client, data):
         super().__init__(client, data)
 
-    def __str__(self):
-        return f"(User) | id: {self.id}, username: {self.username}"
 
+class PhotoSize(MasterType):
+	__slots__ = ['id', 'width', 'height', 'file_size']
+
+	def __init__(self, client, data):
+		super().__init__(client, data)
