@@ -27,7 +27,6 @@ class UpdateManager():
         self.last_update = None
         self.command_queue = []
 
-        self.queue_empty = True
 
         #loop = threading.Thread(target=self.update_loop)
         #loop.daemon = True
@@ -38,10 +37,6 @@ class UpdateManager():
     def get_command(self):
 
         command = self.command_queue.pop(0)
-
-        if not self.command_queue:
-            self.queue_empty = True
-
         return DotMap(command)
 
 
@@ -53,7 +48,8 @@ class UpdateManager():
 
     async def poll_updates(self, offset=None):
 
-        url = self.URL + f"getUpdates?timeout={self.poll_timeout}"
+        url = f"{self.URL}getUpdates?timeout={self.poll_timeout}"
+
         if offset:
             url += f"&offset={offset}"
 
@@ -67,7 +63,6 @@ class UpdateManager():
 
                 self.command_queue.extend(js)
                 self.last_update = max(x["update_id"] for x in js) + 1
-                self.queue_empty = False
                 print(f"Poll Successful: {self.last_update}")
                 await self.callback()
 
@@ -118,7 +113,7 @@ class NatsukoClient():
 
         if not self._process_lock.locked():
             with (await self._process_lock):
-                while not self.manager.queue_empty:
+                while self.manager.command_queue:
                     raw_command = self.manager.get_command()
                     self.parse_command(raw_command)
 
@@ -126,6 +121,7 @@ class NatsukoClient():
     def parse_command(self, raw_command):
 
         message = Message(self, raw_command.message)
+
         for entity in raw_command.message.entities:
             if "bot_command" in entity['type']:
 
@@ -133,6 +129,7 @@ class NatsukoClient():
                 command = raw_command.message.text[entity.offset + 1: entity.offset + entity.length]
 
                 print(f"Identified as Bot Command: {command}")
+
                 if command in self.commands:
                     func = self.commands[command]["function"]
 
@@ -174,10 +171,10 @@ class NatsukoClient():
         apiq = f"{self.API_URL}{endpoint}?"
 
         for arg, value in kwargs.items():
-            if value != None:   
+            if value != None:
                 apiq += f"{arg}={value}&"
 
-            elif isinstance(val, dict):
+            elif isinstance(value, dict):
                 value = urllib.parse.quote_plus(value)
                 apiq += f"{arg}={value}&"
 
@@ -222,11 +219,11 @@ class NatsukoClient():
         apiq = self.api_gen("sendMessage",
                             text=message,
                             chat_id=chat_id,
-                            parse_mode=kwarg.get("parse_mode"),
-                            disable_web_page_preview=kwarg.get("disable_web_page_preview"),
-                            disable_notification=kwarg.get("disable_notification"),
-                            reply_to_message_id=kwarg.get("reply"),
-                            reply_markup=kwarg.get("reply_markup"))
+                            parse_mode=kwargs.get("parse_mode"),
+                            disable_web_page_preview=kwargs.get("disable_web_page_preview"),
+                            disable_notification=kwargs.get("disable_notification"),
+                            reply_to_message_id=kwargs.get("reply"),
+                            reply_markup=kwargs.get("reply_markup"))
 
         return await self._api_send(apiq)
 
@@ -340,13 +337,13 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwarg.get("caption")
-        duration = kwarg.get("duration")
-        performer = kwarg.get("performer")
-        title = kwarg.get("title")
-        disable_notification = kwarg.get("disable_notification")
-        reply = kwarg.get("reply")
-        reply_markup = kwarg.get("reply_markup")
+        caption = kwargs.get("caption")
+        duration = kwargs.get("duration")
+        performer = kwargs.get("performer")
+        title = kwargs.get("title")
+        disable_notification = kwargs.get("disable_notification")
+        reply = kwargs.get("reply")
+        reply_markup = kwargs.get("reply_markup")
 
         if type(audio) is str:
             apiq = self.api_gen("sendAudio",
@@ -397,10 +394,10 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwarg.get("caption")
-        disable_notification = kwarg.get("disable_notification")
-        reply = kwarg.get("reply")
-        reply_markup = kwarg.get("reply_markup")
+        caption = kwargs.get("caption")
+        disable_notification = kwargs.get("disable_notification")
+        reply = kwargs.get("reply")
+        reply_markup = kwargs.get("reply_markup")
 
         if type(document) is str:
             apiq = self.api_gen("sendDocument",
@@ -450,13 +447,13 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwarg.get("caption")
-        duration = kwarg.get("duration")
-        width = kwarg.get("width")
-        height = kwarg.get("height")
-        disable_notification = kwarg.get("disable_notification")
-        reply = kwarg.get("reply")
-        reply_markup = kwarg.get("reply_markup")
+        caption = kwargs.get("caption")
+        duration = kwargs.get("duration")
+        width = kwargs.get("width")
+        height = kwargs.get("height")
+        disable_notification = kwargs.get("disable_notification")
+        reply = kwargs.get("reply")
+        reply_markup = kwargs.get("reply_markup")
 
         if type(video) is str:
             apiq = self.api_gen("sendVideo",
@@ -510,11 +507,11 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwarg.get("caption")
-        duration = kwarg.get("duration")
-        disable_notification = kwarg.get("disable_notification")
-        reply = kwarg.get("reply")
-        reply_markup = kwarg.get("reply_markup")
+        caption = kwargs.get("caption")
+        duration = kwargs.get("duration")
+        disable_notification = kwargs.get("disable_notification")
+        reply = kwargs.get("reply")
+        reply_markup = kwargs.get("reply_markup")
 
         if type(voice) is str:
             apiq = self.api_gen("sendVoice",
@@ -562,10 +559,10 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        duration = kwarg.get("duration")
-        disable_notification = kwarg.get("disable_notification")
-        reply = kwarg.get("reply")
-        reply_markup = kwarg.get("reply_markup")
+        duration = kwargs.get("duration")
+        disable_notification = kwargs.get("disable_notification")
+        reply = kwargs.get("reply")
+        reply_markup = kwargs.get("reply_markup")
 
         if type(v_note) is str:
             apiq = self.api_gen("sendVideoNote",
@@ -614,9 +611,9 @@ class NatsukoClient():
                             chat_id=chat_id,
                             latitude=lat,
                             longitude=long_,
-                            disable_notification=kwarg.get("disable_notification"),
-                            reply_to_message_id=kwarg.get("reply"),
-                            reply_markup=kwarg.get("reply_markup"))
+                            disable_notification=kwargs.get("disable_notification"),
+                            reply_to_message_id=kwargs.get("reply"),
+                            reply_markup=kwargs.get("reply_markup"))
 
         return await self._api_send(apiq)
 
@@ -648,10 +645,10 @@ class NatsukoClient():
                             longitude=long_,
                             title=title,
                             address=address,
-                            disable_notification=kwarg.get("disable_notification"),
-                            foursquare_id=kwarg.get("foursquare_id"),
-                            reply_to_message_id=kwarg.get("reply"),
-                            reply_markup=kwarg.get("reply_markup"))
+                            disable_notification=kwargs.get("disable_notification"),
+                            foursquare_id=kwargs.get("foursquare_id"),
+                            reply_to_message_id=kwargs.get("reply"),
+                            reply_markup=kwargs.get("reply_markup"))
 
         return await self._api_send(apiq)
 
@@ -679,10 +676,10 @@ class NatsukoClient():
                             chat_id=chat_id,
                             phone_number=phone_number,
                             first_name=first_name,
-                            last_name=kwarg.get("last_name"),
-                            disable_notification=kwarg.get("disable_notification"),
-                            reply_to_message_id=kwarg.get("reply"),
-                            reply_markup=kwarg.get("reply_markup"))
+                            last_name=kwargs.get("last_name"),
+                            disable_notification=kwargs.get("disable_notification"),
+                            reply_to_message_id=kwargs.get("reply"),
+                            reply_markup=kwargs.get("reply_markup"))
 
         return await self._api_send(apiq)
 
@@ -738,8 +735,8 @@ class NatsukoClient():
 
         apiq = self.api_gen("getUserProfilePhotos",
                             user_id=user_id,
-                            offset=kwarg.get("offset"),
-                            limit=kwarg.get("limit"))
+                            offset=kwargs.get("offset"),
+                            limit=kwargs.get("limit"))
 
         result = self._api_send(apiq)["result"]
         return DotMap(result)
@@ -783,11 +780,11 @@ class NatsukoClient():
         apiq = self.api_gen("restrictChatMember",
                             chat_id=chat_id,
                             user_id=user_id,
-                            until_date=kwarg.get("until_date"),
-                            can_send_messages=kwarg.get("can_send_messages"),
-                            can_send_media_messages=kwarg.get("can_send_media_messages"),
-                            can_send_other_messages=kwarg.get("can_send_other_messages"),
-                            can_add_web_page_previews=kwarg.get("can_add_web_page_previews"))
+                            until_date=kwargs.get("until_date"),
+                            can_send_messages=kwargs.get("can_send_messages"),
+                            can_send_media_messages=kwargs.get("can_send_media_messages"),
+                            can_send_other_messages=kwargs.get("can_send_other_messages"),
+                            can_add_web_page_previews=kwargs.get("can_add_web_page_previews"))
 
         return await self._api_send(apiq)
 
@@ -797,14 +794,14 @@ class NatsukoClient():
         apiq = self.api_gen("promoteChatMember",
                             chat_id=chat_id,
                             user_id=user_id,
-                            can_change_info=kwarg.get("can_change_info"),
-                            can_post_messages=kwarg.get("can_post_messages"),
-                            can_edit_messages=kwarg.get("can_edit_messages"),
-                            can_delete_messages=kwarg.get("can_delete_messages"),
-                            can_invite_users=kwarg.get("can_invite_users"),
-                            can_restrict_users=kwarg.get("can_restrict_users"),
-                            can_pin_messages=kwarg.get("can_pin_messages"),
-                            can_promote_members=kwarg.get("can_promote_members"))
+                            can_change_info=kwargs.get("can_change_info"),
+                            can_post_messages=kwargs.get("can_post_messages"),
+                            can_edit_messages=kwargs.get("can_edit_messages"),
+                            can_delete_messages=kwargs.get("can_delete_messages"),
+                            can_invite_users=kwargs.get("can_invite_users"),
+                            can_restrict_users=kwargs.get("can_restrict_users"),
+                            can_pin_messages=kwargs.get("can_pin_messages"),
+                            can_promote_members=kwargs.get("can_promote_members"))
 
         return await self._api_send(apiq)
 
@@ -857,7 +854,7 @@ class NatsukoClient():
         apiq = self.api_gen("pinChatMessage",
                             chat_id=chat_id,
                             message_id=message_id,
-                            disable_notification=kwarg.get("disable_notification"))
+                            disable_notification=kwargs.get("disable_notification"))
 
         return await self._api_send(apiq)
 
@@ -907,13 +904,13 @@ class NatsukoClient():
     async def edit_message_text(self, text, **kwargs):
 
         apiq = self.api_gen("editMessageText",
-                            chat_id=kwarg.get("chat_id"),
-                            message_id=kwarg.get("message_id"),
-                            inline_message_id=kwarg.get("inline_message_id"),
+                            chat_id=kwargs.get("chat_id"),
+                            message_id=kwargs.get("message_id"),
+                            inline_message_id=kwargs.get("inline_message_id"),
                             text=text,
-                            parse_mode=kwarg.get("parse_mode"),
-                            disable_web_page_preview=kwarg.get("disable_web_page_preview"),
-                            reply_markup=kwarg.get("reply_markup"))
+                            parse_mode=kwargs.get("parse_mode"),
+                            disable_web_page_preview=kwargs.get("disable_web_page_preview"),
+                            reply_markup=kwargs.get("reply_markup"))
 
         return await self._api_send(apiq)
 
@@ -921,11 +918,11 @@ class NatsukoClient():
     async def edit_message_caption(self, caption, **kwargs):
 
         apiq = self.api_gen("editMessageCaption",
-                            chat_id=kwarg.get("chat_id"),
-                            message_id=kwarg.get("message_id"),
-                            inline_message_id=kwarg.get("inline_message_id"),
+                            chat_id=kwargs.get("chat_id"),
+                            message_id=kwargs.get("message_id"),
+                            inline_message_id=kwargs.get("inline_message_id"),
                             caption=caption,
-                            reply_markup=kwarg.get("reply_markup"))
+                            reply_markup=kwargs.get("reply_markup"))
 
         return await self._api_send(apiq)
 
@@ -933,9 +930,9 @@ class NatsukoClient():
     async def edit_message_reply_markup(self, markup, **kwargs):
 
         apiq = self.api_gen("editMessageReplyMarkup",
-                            chat_id=kwarg.get("chat_id"),
-                            message_id=kwarg.get("message_id"),
-                            inline_message_id=kwarg.get("inline_message_id"),
+                            chat_id=kwargs.get("chat_id"),
+                            message_id=kwargs.get("message_id"),
+                            inline_message_id=kwargs.get("inline_message_id"),
                             reply_markup=markup)
 
         return await self._api_send(apiq)
