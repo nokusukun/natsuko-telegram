@@ -67,7 +67,7 @@ class Event(MasterType):
 
 class Message(MasterType):
 
-    __slots__ = ['message_id', 'user', 'date', 'chat', 'forward_from', 'forward_from_chat',
+    __slots__ = ['message_id', 'author', 'date', 'chat', 'forward_from', 'forward_from_chat',
                  'forward_from_message_id', 'forward_date', 'reply_to_message', 'edit_date',
                  'text', 'entities', 'audio', 'document', 'game', 'photo', 'sticker', 'video',
                  'voice', 'video_note', 'new_chat_members', 'caption', 'contact', 'location',
@@ -79,7 +79,7 @@ class Message(MasterType):
 
     def __init__(self, client, data):
 
-        data_map = {"from": ("user", User),
+        data_map = {"from": ("author", User),
                     "chat": ("chat", Chat)}
         super().__init__(client, data, data_map)
 
