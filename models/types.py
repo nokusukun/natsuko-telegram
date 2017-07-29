@@ -49,7 +49,7 @@ class MasterType():
     def __str__(self):
     	d = ", ".join([f"{x}={self.__dict__[x]}" for x in self.__slots__ if x in self.__dict__])
     	t = str(type(self))[8:-2]
-    	return f'({t}): [{d}]'
+    	return f'<{t}>: ({d})'
 
 
 class Event(MasterType):
@@ -98,7 +98,7 @@ class Message(MasterType):
 
 class MessageEntity(MasterType):
 
-    __slots__ = ['text', 'type', 'offset', 'length', 'bot_command']
+    __slots__ = ['text', 'type', 'offset', 'length', 'bot_command', 'clean_text']
 
     def __init__(self, client, text, data):
         super().__init__(client, data)
