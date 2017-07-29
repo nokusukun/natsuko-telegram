@@ -47,9 +47,9 @@ class MasterType():
             self.__dict__[attr] = self.data.get(attr)
 
     def __str__(self):
-    	d = ", ".join([f"{x}={self.__dict__[x]}" for x in self.__slots__ if x in self.__dict__])
-    	t = str(type(self))[8:-2]
-    	return f'<{t}>: ({d})'
+        d = ", ".join([f"{x}={self.__dict__[x]}" for x in self.__slots__ if x in self.__dict__])
+        t = str(type(self))[8:-2]
+        return f'<{t}>: ({d})'
 
 
 class Event(MasterType):
@@ -325,4 +325,5 @@ class InputFile(MasterType):
 
     def __init__(self, client, data):
         super().__init__(client, data)
+
 
