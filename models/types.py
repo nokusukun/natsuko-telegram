@@ -138,7 +138,191 @@ class User(MasterType):
 
 
 class PhotoSize(MasterType):
-	__slots__ = ['id', 'width', 'height', 'file_size']
 
-	def __init__(self, client, data):
-		super().__init__(client, data)
+    __slots__ = ['id', 'width', 'height', 'file_size']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class Audio(MasterType):
+
+    __slots__ = ['file_id', 'duration', 'performer', 'title', 'mime_type', 'file_size']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+
+class Document(MasterType):
+
+    __slots__ = ['file_id', 'thumb', 'file_name', 'mime_type', 'file_size']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class Video(MasterType):
+
+    __slots__ = ['file_id', 'width', 'height', 'duration', 'thumb', 'mime_type', 'file_size']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class Voice(MasterType):
+
+    __slots__ = ['file_id', 'duration', 'mime_type', 'file_size']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+
+class VideoNote(MasterType):
+
+    __slots__ = ['file_id', 'length', 'duration', 'thumb', 'file_size']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+
+class Contact(MasterType):
+
+    __slots__ = ['phone_number', 'first_name', 'last_name', 'user_id']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+
+class Location(MasterType):
+
+    __slots__ = ['longitude', 'latitude']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+
+class Venue(MasterType):
+
+    __slots__ = ['location', 'title', 'address', 'foursquare_Id']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+
+class UserProfilePhotos(MasterType):
+
+    __slots__ = ['total_count', 'photos']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class File(MasterType):
+
+    __slots__ = ['file_id', 'file_size', 'file_path']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class ReplyKeyboardMarkup(MasterType):
+
+    __slots__ = ['keyboard', 'resize_keyboard', 'one_time_keyboard', 'selective']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+
+class KeyboardButton(MasterType):
+
+    __slots__ = ['text', 'request_contact', 'request_location']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+
+class ReplyKeyboardRemove(MasterType):
+
+    __slots__ = ['remove_keyboard', 'selective']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class InlineKeyboardMarkup(MasterType):
+
+    __slots__ = ['inline_keyboard']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class InlineKeyboardButton(MasterType):
+
+    __slots__ = ['text', 'url', 'callback_data', 'switch_inline_query',
+                 'switch_inline_query_current_chat', 'callback_game', 'pay']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class CallbackQuery(MasterType):
+
+    __slots__ = ['id', 'from', 'message', 'inline_message_id', 'chat_instance',
+                 'data', 'game_short_name']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class ForcedReply(MasterType):
+
+    __slots__ = ['forced_reply', 'selective']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class ChatPhoto(MasterType):
+
+    __slots__ = ['small_file_id', 'big_file_id']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class ChatMember(MasterType):
+
+    __slots__ = ['user', 'status', 'until_date', 'can_be_edited', 'can_change_photo',
+                 'can_post_messages', 'can_edit_messages', 'can_invite_users', 'can_restrict_mmebers',
+                 'can_pin_messages', 'can_promote_uesrs', 'can_send_messages', 'can_send_media_messages',
+                 'can_send_other_messages', 'can_add_web_page_previews']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class ResponseParameters(MasterType):
+
+    __slots__ = ['migrate_to_chat_id', 'reply_after']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class InputFile(MasterType):
+
+    __slots__ = ['chat_id', 'text', 'parse_mode', 'disable_web_page_preview',
+                 'disable_notification', 'reply_to_message_id', 'reply_markup']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
