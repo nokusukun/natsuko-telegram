@@ -10,6 +10,7 @@ from models.errors import APIError
 import asyncio
 import aiohttp
 import traceback
+from pprint import pprint
 
 class UpdateManager():
 
@@ -28,17 +29,12 @@ class UpdateManager():
         self.command_queue = []
 
 
-        #loop = threading.Thread(target=self.update_loop)
-        #loop.daemon = True
-        #loop.start()
-        #print("Done")
-
-
     async def update_loop(self):
         print("Starting Poll Update Loop")
 
         while True:
             await self.poll_updates(self.last_update)
+
 
     async def poll_updates(self, offset=None):
 
@@ -47,27 +43,15 @@ class UpdateManager():
         if offset:
             url += f"&offset={offset}"
 
-        try:
-            async with self.session.get(url) as resp:
-                data = await resp.text()
-                js = json.loads(data)["result"]
-
-                if not js:
-                    return
-
-                self.command_queue.extend(js)
-                self.last_update = max(x["update_id"] for x in js) + 1
+        async with self.session.get(url) as resp:
+            data = await resp.json()
+            result = data['result']
+            
+            if result:
+                self.command_queue.extend(result)
+                self.last_update = max(x["update_id"] for x in result) + 1
                 print(f"Poll Successful: {self.last_update}")
                 await self.callback()
-
-
-        except Exception as e:
-                print(f"exception: {e}")
-                traceback.print_exc()
-
-        finally:
-            await asyncio.sleep(0.5)
-
 
 
 class NatsukoClient():
