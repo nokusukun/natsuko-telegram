@@ -46,7 +46,7 @@ class UpdateManager():
         async with self.session.get(url) as resp:
             data = await resp.json()
             result = data['result']
-            
+
             if result:
                 self.command_queue.extend(result)
                 self.last_update = max(x["update_id"] for x in result) + 1
@@ -256,21 +256,14 @@ class NatsukoClient():
         reply = kwargs.get("reply")
         reply_markup = kwargs.get("reply_markup")
 
-        if type(photo) is str and not photo.startswith("http"):
+
+        if isinstance(photo, str):
+            if photo.startswith('http'):
+                photo = urllib.parse.quote(photo)
+
             apiq = self.api_gen("sendPhoto",
                                 chat_id=chat_id,
                                 photo=photo,
-                                caption=caption,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            return await self._api_send(apiq)
-
-        elif type(photo) is str and photo.startswith("http"):
-            apiq = self.api_gen("sendPhoto",
-                                chat_id=chat_id,
-                                photo=urllib.parse.quote(photo),
                                 caption=caption,
                                 disable_notification=disable_notification,
                                 reply_to_message_id=reply,
@@ -286,8 +279,8 @@ class NatsukoClient():
                                 reply_to_message_id=reply,
                                 reply_markup=reply_markup)
 
-            response = requests.post(apiq, files=dict(photo=photo))
-            return json.loads(response.content.decode("utf8"))
+            response = await self.session.post(apiq, data=dict(photo=photo))
+            return response.json()
 
 
     async def send_audio(self, chat_id, audio, **kwargs):
@@ -323,7 +316,7 @@ class NatsukoClient():
         reply = kwargs.get("reply")
         reply_markup = kwargs.get("reply_markup")
 
-        if type(audio) is str:
+        if isinstance(audio, str):
             apiq = self.api_gen("sendAudio",
                                 chat_id=chat_id,
                                 audio=audio,
@@ -348,8 +341,8 @@ class NatsukoClient():
                                 reply_to_message_id=reply,
                                 reply_markup=reply_markup)
 
-            response = requests.post(apiq, files=dict(audio=audio))
-            return response.content.decode("utf8")
+            response = await self.session.post(apiq, data=dict(audio=audio))
+            return response.json()
 
 
     async def send_document(self, chat_id, document, **kwargs):
@@ -377,7 +370,7 @@ class NatsukoClient():
         reply = kwargs.get("reply")
         reply_markup = kwargs.get("reply_markup")
 
-        if type(document) is str:
+        if isinstance(document, str):
             apiq = self.api_gen("sendDocument",
                                 chat_id=chat_id,
                                 document=document,
@@ -396,8 +389,8 @@ class NatsukoClient():
                                 reply_to_message_id=reply,
                                 reply_markup=reply_markup)
 
-            response = requests.post(apiq, files=dict(document=document))
-            return response.content.decode("utf8")
+            response = await self.session.post(apiq, data=dict(document=document))
+            return response.json()
 
 
     async def send_video(self, chat_id, video, **kwargs):
@@ -433,7 +426,7 @@ class NatsukoClient():
         reply = kwargs.get("reply")
         reply_markup = kwargs.get("reply_markup")
 
-        if type(video) is str:
+        if isinstance(video, str):
             apiq = self.api_gen("sendVideo",
                                 chat_id=chat_id,
                                 audio=audio,
@@ -458,8 +451,8 @@ class NatsukoClient():
                                 reply_to_message_id=reply,
                                 reply_markup=reply_markup)
 
-            response = requests.post(apiq, files=dict(video=video))
-            return response.content.decode("utf8")
+            response = await self.session.post(apiq, data=dict(video=video))
+            return response.json()
 
 
     async def send_voice(self, chat_id, voice, **kwargs):
@@ -491,7 +484,7 @@ class NatsukoClient():
         reply = kwargs.get("reply")
         reply_markup = kwargs.get("reply_markup")
 
-        if type(voice) is str:
+        if isinstance(voice, str):
             apiq = self.api_gen("sendVoice",
                                 chat_id=chat_id,
                                 voice=voice,
@@ -512,8 +505,8 @@ class NatsukoClient():
                                 reply_to_message_id=reply,
                                 reply_markup=reply_markup)
 
-            response = requests.post(apiq, files=dict(voice=voice))
-            return response.content.decode("utf8")
+            response = await self.session.post(apiq, data=dict(voice=voice))
+            return response.json()
 
 
     async def send_video_note(self, chat_id, v_note, **kwargs):
@@ -542,7 +535,7 @@ class NatsukoClient():
         reply = kwargs.get("reply")
         reply_markup = kwargs.get("reply_markup")
 
-        if type(v_note) is str:
+        if isinstance(v_note, str):
             apiq = self.api_gen("sendVideoNote",
                                 chat_id=chat_id,
                                 video_note=video_note,
@@ -561,8 +554,8 @@ class NatsukoClient():
                                 reply_to_message_id=reply,
                                 reply_markup=reply_markup)
 
-            response = requests.post(apiq, files=dict(video_note=video_note))
-            return response.content.decode("utf8")
+            response = await self.session.post(apiq, data=dict(video_note=video_note))
+            return response.json()
 
 
     async def send_location(self, chat_id, long_, lat, **kwargs):
@@ -797,8 +790,8 @@ class NatsukoClient():
         apiq = self.api_gen("setChatPhoto",
                             chat_id=chat_id)
 
-        response = requests.post(apiq, files=dict(photo=photo))
-        return json.loads(response.content.decode("utf8"))
+        response = await self.session.post(apiq, data=dict(photo=photo))
+        return response.json()
 
 
     async def delete_chat_photo(self, chat_id):
@@ -923,4 +916,3 @@ class NatsukoClient():
                             message_id=message_id)
 
         return await self._api_send(apiq)
-
