@@ -105,7 +105,10 @@ class MessageEntity(MasterType):
 
         self.text = text[self.offset: self.offset + self.length]
         self.clean_text = self.text[1:]
-        self.bot_command = self.type == 'bot_command'
+
+    @property
+    def is_command(self):
+        return self.type == 'bot_command'
 
 
 class Chat(MasterType):

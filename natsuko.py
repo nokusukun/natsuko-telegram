@@ -92,7 +92,7 @@ class NatsukoClient():
     def parse_command(self, event):
 
         for entity in event.message.entities:
-            if entity.type == 'bot_command':
+            if entity.is_command:
                 command = entity.text[1:]
                 print(f"Identified as Bot Command: {entity}")
 
@@ -136,21 +136,6 @@ class NatsukoClient():
         return deco
 
 
-    def api_gen(self, endpoint, **kwargs):
-
-        apiq = self.API_URL + endpoint
-
-
-        #for arg, value in kwargs.items():
-            #if value != None:
-               # apiq += f"{arg}={value}&"
-
-            #elif isinstance(value, dict):
-             #   value = urllib.parse.quote_plus(value)
-              #  apiq += f"{arg}={value}&"
-
-        return apiq, kwargs
-
     async def _api_send(self, url, apiq):
         print(f"APISEND: {apiq}")
 
@@ -193,7 +178,7 @@ class NatsukoClient():
 
 
     async def forward_message(self, target_cid, source_cid,
-                    message_id, disable_notification=None):
+                    message_id, **kwargs):
         """
         Use this method to forward messages of any kind. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
@@ -209,13 +194,12 @@ class NatsukoClient():
         message_id              Integer Yes         Message identifier in the chat specified in from_chat_id
         """
 
-        apiq = self.api_gen("forwardMessage",
-                            chat_id=target_cid,
-                            from_chat_id=source_cid,
-                            message_id=message_id,
-                            disable_notification=disable_notification)
+        endpoint = "forwardMessage"
 
-        return await self._api_send(apiq)
+        url = self.API_URL + endpoint
+        args = {'chat_id': target_cid, 'from_chat_id': source_cid, 'message_id': message_id, **kwargs}
+
+        return await self._api_send(url, args)
 
 
     async def send_photo(self, chat_id, photo, **kwargs):
@@ -278,40 +262,17 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwargs.get("caption")
-        duration = kwargs.get("duration")
-        performer = kwargs.get("performer")
-        title = kwargs.get("title")
-        disable_notification = kwargs.get("disable_notification")
-        reply = kwargs.get("reply")
-        reply_markup = kwargs.get("reply_markup")
+        endpoint = "sendAudio"
+
+        url = self.API_URL + endpoint
 
         if isinstance(audio, str):
-            apiq = self.api_gen("sendAudio",
-                                chat_id=chat_id,
-                                audio=audio,
-                                caption=caption,
-                                duration=duration,
-                                performer=performer,
-                                title=title,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            return await self._api_send(apiq)
+            args = {'chat_id': chat_id, 'audio': audio, **kwargs}
+            return await self._api_send(url, args)
 
         else:
-            apiq = self.api_gen("sendAudio",
-                                chat_id=chat_id,
-                                caption=caption,
-                                duration=duration,
-                                performer=performer,
-                                title=title,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            response = await self.session.post(apiq, data=dict(audio=audio))
+            args = {'chat_id': chat_id, **kwargs}
+            response = await self.session.post(url, data=dict(audio=audio), params=args)
             return response.json()
 
 
@@ -335,31 +296,15 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwargs.get("caption")
-        disable_notification = kwargs.get("disable_notification")
-        reply = kwargs.get("reply")
-        reply_markup = kwargs.get("reply_markup")
+        endpoint = "sendDocument"
 
         if isinstance(document, str):
-            apiq = self.api_gen("sendDocument",
-                                chat_id=chat_id,
-                                document=document,
-                                caption=caption,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            return await self._api_send(apiq)
+            args = {'chat_id': chat_id, 'document': document, **kwargs}
+            return await self._api_send(url, args)
 
         else:
-            apiq = self.api_gen("sendDocument",
-                                chat_id=chat_id,
-                                caption=caption,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            response = await self.session.post(apiq, data=dict(document=document))
+            args = {'chat_id': chat_id, **kwargs}
+            response = await self.session.post(url, data=dict(document=document), params=args)
             return response.json()
 
 
@@ -388,40 +333,17 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwargs.get("caption")
-        duration = kwargs.get("duration")
-        width = kwargs.get("width")
-        height = kwargs.get("height")
-        disable_notification = kwargs.get("disable_notification")
-        reply = kwargs.get("reply")
-        reply_markup = kwargs.get("reply_markup")
+        endpoint = "sendVideo"
+
+        url = self.API_URL + endpoint
 
         if isinstance(video, str):
-            apiq = self.api_gen("sendVideo",
-                                chat_id=chat_id,
-                                audio=audio,
-                                caption=caption,
-                                duration=duration,
-                                width=width,
-                                height=height,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            return await self._api_send(apiq)
+            args = {"chat_id": chat_id, "video": video, **kwargs}
+            return await self._api_send(url, args)
 
         else:
-            apiq = self.api_gen("sendVideo",
-                                chat_id=chat_id,
-                                caption=caption,
-                                duration=duration,
-                                width=width,
-                                height=height,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            response = await self.session.post(apiq, data=dict(video=video))
+            args = {"chat_id": chat_id, **kwargs}
+            response = await self.session.post(url, data=dict(video=video), params=args)
             return response.json()
 
 
@@ -448,34 +370,17 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwargs.get("caption")
-        duration = kwargs.get("duration")
-        disable_notification = kwargs.get("disable_notification")
-        reply = kwargs.get("reply")
-        reply_markup = kwargs.get("reply_markup")
+        endpoint = "sendVoice"
+
+        url = self.API_URL + endpoint
 
         if isinstance(voice, str):
-            apiq = self.api_gen("sendVoice",
-                                chat_id=chat_id,
-                                voice=voice,
-                                caption=caption,
-                                duration=duration,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
+            args = {"chat_id": chat_id, "voice": voice, **kwargs}
             return await self._api_send(apiq)
 
         else:
-            apiq = self.api_gen("sendVoice",
-                                chat_id=chat_id,
-                                caption=caption,
-                                duration=duration,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            response = await self.session.post(apiq, data=dict(voice=voice))
+            args = {"chat_id": chat_id, **kwargs}
+            response = await self.session.post(url, data=dict(voice=voice), params=args)
             return response.json()
 
 
@@ -500,35 +405,20 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        duration = kwargs.get("duration")
-        disable_notification = kwargs.get("disable_notification")
-        reply = kwargs.get("reply")
-        reply_markup = kwargs.get("reply_markup")
+        endpoint = "sendVideoNote"
+        url = self.API_URL + endpoint
 
         if isinstance(v_note, str):
-            apiq = self.api_gen("sendVideoNote",
-                                chat_id=chat_id,
-                                video_note=video_note,
-                                duration=duration,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            return await self._api_send(apiq)
+            args = {"chat_id": chat_id, "video_note": v_note}
+            return await self._api_send(url, args)
 
         else:
-            apiq = self.api_gen("sendVideoNote",
-                                chat_id=chat_id,
-                                duration=duration,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            response = await self.session.post(apiq, data=dict(video_note=video_note))
+            args = {"chat_id": chat_id}
+            response = await self.session.post(url, data=dict(video_note=v_note), params=args)
             return response.json()
 
 
-    async def send_location(self, chat_id, long_, lat, **kwargs):
+    async def send_location(self, chat_id, long, lat, **kwargs):
         """Use this method to send point on the map. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
 
@@ -548,18 +438,14 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        apiq = self.api_gen("sendLocation",
-                            chat_id=chat_id,
-                            latitude=lat,
-                            longitude=long_,
-                            disable_notification=kwargs.get("disable_notification"),
-                            reply_to_message_id=kwargs.get("reply"),
-                            reply_markup=kwargs.get("reply_markup"))
+        endpoint = 'sendLocation'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, "latitude": lat, "longitutde": long, **kwargs}
+        return await self._api_send(url, args)
 
 
-    async def send_venue(self, chat_id, long_, title, address, lat, **kwargs):
+    async def send_venue(self, chat_id, lat, long, title, addr, **kwargs):
         """Use this method to send information about a venue. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
 
@@ -580,18 +466,11 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        apiq = self.api_gen("sendVenue",
-                            chat_id=chat_id,
-                            latitude=lat,
-                            longitude=long_,
-                            title=title,
-                            address=address,
-                            disable_notification=kwargs.get("disable_notification"),
-                            foursquare_id=kwargs.get("foursquare_id"),
-                            reply_to_message_id=kwargs.get("reply"),
-                            reply_markup=kwargs.get("reply_markup"))
+        endpoint = "sendVenue"
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'latitude': lat, "longitude": long, 'title': title, 'address': addr}
+        return await self._api_send(url, args)
 
 
     async def send_contact(self, chat_id, phone_number, first_name, **kwargs):
@@ -613,16 +492,11 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        apiq = self.api_gen("sendVenue",
-                            chat_id=chat_id,
-                            phone_number=phone_number,
-                            first_name=first_name,
-                            last_name=kwargs.get("last_name"),
-                            disable_notification=kwargs.get("disable_notification"),
-                            reply_to_message_id=kwargs.get("reply"),
-                            reply_markup=kwargs.get("reply_markup"))
+        endpoint = 'sendContact'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'phone_number': phone_number, 'first_name': first_name, **kwargs}
+        return await self._api_send(url, args)
 
 
     async def send_chat_action(self, chat_id, action):
@@ -674,215 +548,196 @@ class NatsukoClient():
                                                         Values between 1—100 are accepted. Defaults to 100
         """
 
-        apiq = self.api_gen("getUserProfilePhotos",
-                            user_id=user_id,
-                            offset=kwargs.get("offset"),
-                            limit=kwargs.get("limit"))
+        endpoint = 'getUserProfilePhotos'
+        url = self.API_URL + endpoint
 
-        result = self._api_send(apiq)["result"]
-        return DotMap(result)
+        args = {'user_id': user_id, **kwargs}
+        return await self._api_send(url, args)
 
 
     async def get_file(self, file_id):
 
-        apiq = self.api_gen("getFile",
-                            file_id=file_id)
+        endpoint = 'getFile'
+        url = self.API_URL + endpoint
 
-        result = self._api_send(apiq)
-        return DotMap(result)
-
+        args = {'file_id': file_id}
+        return await self._api_send(url, args)
 
     async def get_file_url(self, file_obj):
 
-        return "https://api.telegram.org/file/bot{}/{}".format(self.token, file_obj.file_path)
+        return f"https://api.telegram.org/file/bot{self.token}/{file_obj.file_path}"
 
 
-    async def ban_chat_memeber(self, chat_id, user_id, until_date=None):
+    async def ban_chat_memeber(self, chat_id, user_id, **kwargs):
 
-        apiq = self.api_gen("kickChatMember",
-                            chat_id=chat_id,
-                            user_id=user_id,
-                            until_date=until_date)
+        endpoint = "kickChatMember"
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'user_id': user_id, **kwargs}
+        return await self._api_send(url, args)
 
 
     async def unban_chat_memeber(self, chat_id, user_id):
 
-        apiq = self.api_gen("unbanChatMember",
-                            chat_id=chat_id,
-                            user_id=user_id)
+        endpoint = 'unbanChatMember'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'user_id': user_id}
+        return await self._api_send(url, args)
 
 
     async def restrict_chat_memeber(self, chat_id, user_id, **kwargs):
 
-        apiq = self.api_gen("restrictChatMember",
-                            chat_id=chat_id,
-                            user_id=user_id,
-                            until_date=kwargs.get("until_date"),
-                            can_send_messages=kwargs.get("can_send_messages"),
-                            can_send_media_messages=kwargs.get("can_send_media_messages"),
-                            can_send_other_messages=kwargs.get("can_send_other_messages"),
-                            can_add_web_page_previews=kwargs.get("can_add_web_page_previews"))
+        endpoint = 'restrictChatMember'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'user_id': user_id, **kwargs}
+        return await self._api_send(url, args)
 
 
     async def promote_chat_memeber(self, chat_id, user_id, **kwargs):
 
-        apiq = self.api_gen("promoteChatMember",
-                            chat_id=chat_id,
-                            user_id=user_id,
-                            can_change_info=kwargs.get("can_change_info"),
-                            can_post_messages=kwargs.get("can_post_messages"),
-                            can_edit_messages=kwargs.get("can_edit_messages"),
-                            can_delete_messages=kwargs.get("can_delete_messages"),
-                            can_invite_users=kwargs.get("can_invite_users"),
-                            can_restrict_users=kwargs.get("can_restrict_users"),
-                            can_pin_messages=kwargs.get("can_pin_messages"),
-                            can_promote_members=kwargs.get("can_promote_members"))
+        endpoint = 'promoteChatMember'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'user_id': user_id, **kwargs}
+        return await self._api_send(url, args)
 
 
     async def export_invite_link(self, chat_id):
 
-        apiq = self.api_gen("exportChatInviteLink",
-                            chat_id=chat_id)
+        endpoint = 'exportChatInviteLink'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id}
+        return await self._api_send(url, args)
 
 
     async def set_chat_photo(self, chat_id, photo):
 
-        apiq = self.api_gen("setChatPhoto",
-                            chat_id=chat_id)
+        endpoint = 'sendChatPhoto'
+        url = self.API_URL + endpoint
 
-        response = await self.session.post(apiq, data=dict(photo=photo))
+        args = {'chat_id': chat_id}
+        response = await self.session.post(apiq, data=dict(photo=photo), params=args)
         return response.json()
 
 
     async def delete_chat_photo(self, chat_id):
 
-        apiq = self.api_gen("deleteChatPhoto",
-                            chat_id=chat_id)
+        endpoint = 'deleteChatPhoto'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id}
+        return await self._api_send(url, args)
 
 
     async def set_chat_title(self, chat_id, title):
 
-        apiq = self.api_gen("setChatTitle",
-                            chat_id=chat_id,
-                            title=title)
+        endpoint = 'setChatTitle'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'title': title}
+        return await self._api_send(url, args)
 
 
-    async def set_chat_description(self, chat_id, descrption):
+    async def set_chat_description(self, chat_id, desc):
 
-        apiq = self.api_gen("setChatDescription",
-                            chat_id=chat_id,
-                            descrption=descrption)
+        endpoint = 'setChatDescription'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'description': desc}
+        return await self._api_send(url, args)
 
 
     async def pin_chat_message(self, chat_id, message_id, **kwargs):
 
-        apiq = self.api_gen("pinChatMessage",
-                            chat_id=chat_id,
-                            message_id=message_id,
-                            disable_notification=kwargs.get("disable_notification"))
+        endpoint = 'pinChatMessage'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'message_id': message_id, **kwargs}
+        return await self._api_send(url, args)
 
 
     async def unpin_chat_message(self, chat_id):
 
-        apiq = self.api_gen("unpinChatMessage",
-                            chat_id=chat_id)
+        endpoint = 'unpinChatMessage'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id}
+        return await self._api_send(url, args)
 
 
     async def get_chat(self, chat_id):
 
-        apiq = self.api_gen("getChat",
-                            chat_id=chat_id)
+        endpoint = 'getChat'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id}
+        return await self._api_send(url, args)
 
 
     async def get_chat_administrators(self, chat_id):
 
-        apiq = self.api_gen("getChatAdministrators",
-                            chat_id=chat_id)
+        endpoint = 'getChatAdministrators'
 
-        return await self._api_send(apiq)
+        url = self.API_URL + endpoint
+
+        args = {'chat_id': chat_id}
+        return await self._api_send(url, args)
 
 
     async def get_chat_member_count(self, chat_id):
 
-        apiq = self.api_gen("getChatMembersCount",
-                            chat_id=chat_id)
+        endpoint = 'getChatMembersCount'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id}
+        return await self._api_send(url, args)
 
 
-    async def set_chat_member(self, chat_id, user_id):
+    async def get_chat_member(self, chat_id, user_id):
 
-        apiq = self.api_gen("getChatMember",
-                            chat_id=chat_id,
-                            user_id=user_id)
+        endpoint = 'getChatMember'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id}
+        return await self._api_send(url, args)
+
 
     # Updating Messages
 
-    async def edit_message_text(self, text, **kwargs):
+    async def edit_message_text(self, chat_id, msg_id, text, **kwargs):
 
-        apiq = self.api_gen("editMessageText",
-                            chat_id=kwargs.get("chat_id"),
-                            message_id=kwargs.get("message_id"),
-                            inline_message_id=kwargs.get("inline_message_id"),
-                            text=text,
-                            parse_mode=kwargs.get("parse_mode"),
-                            disable_web_page_preview=kwargs.get("disable_web_page_preview"),
-                            reply_markup=kwargs.get("reply_markup"))
+        endpoint = 'editMessageText'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'text': text, 'message_id': msg_id, **kwargs}
+        return await self._api_send(url, args)
 
 
-    async def edit_message_caption(self, caption, **kwargs):
+    async def edit_message_caption(self, chat_id, msg_id, caption, **kwargs):
 
-        apiq = self.api_gen("editMessageCaption",
-                            chat_id=kwargs.get("chat_id"),
-                            message_id=kwargs.get("message_id"),
-                            inline_message_id=kwargs.get("inline_message_id"),
-                            caption=caption,
-                            reply_markup=kwargs.get("reply_markup"))
+        endpoint = 'editMessageCaption'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'message_id': msg_id, 'caption': caption, **kwargs}
+        return await self._api_send(url, args)
 
 
-    async def edit_message_reply_markup(self, markup, **kwargs):
+    async def edit_message_reply_markup(self, chat_id, msg_id, markup, **kwargs):
 
-        apiq = self.api_gen("editMessageReplyMarkup",
-                            chat_id=kwargs.get("chat_id"),
-                            message_id=kwargs.get("message_id"),
-                            inline_message_id=kwargs.get("inline_message_id"),
-                            reply_markup=markup)
+        endpoint = 'editMessageReplyMarkup'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'message_id': msg_id, 'markup': markup, **kwargs}
+        return await self._api_send(url, args)
 
 
-    async def delete_message(self, chat_id, message_id):
+    async def delete_message(self, chat_id, msg_id):
 
-        apiq = self.api_gen("deleteMessage",
-                            chat_id=chat_id,
-                            message_id=message_id)
+        endpoint = 'deleteMessage'
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': chat_id, 'message_id': msg_id}
+        return await self._api_send(url, args)
