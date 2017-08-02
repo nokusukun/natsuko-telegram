@@ -12,16 +12,17 @@ import aiohttp
 import traceback
 from pprint import pprint
 
-class UpdateManager():
 
+class UpdateManager():
 
     def __init__(self, **kwargs):
         self.loop = asyncio.get_event_loop()
 
         self.session = kwargs.get("session")
         self.token = kwargs.get("token")
-        self.poll_timeout = kwargs.get("poll_timeout")
         self.callback = kwargs.get("callback")
+
+        self.poll_timeout = 100
 
         self.URL = f"https://api.telegram.org/bot{self.token}/"
 
@@ -54,26 +55,19 @@ class UpdateManager():
                 await self.callback()
 
 
+
 class NatsukoClient():
 
     def __init__(self, token, **kwargs):
         self.token = token
-        self.poll_timeout = 100
-        self.commands = {}
-
         self.API_URL = f"https://api.telegram.org/bot{self.token}/"
 
-
-        self.manager = None
-        self.com_proc_running = False
-
+        self.commands = {}
         self.usercache = {}
 
         self.loop = asyncio.get_event_loop()
         self.session = aiohttp.ClientSession(loop=self.loop)
-        self.manager = UpdateManager(token=self.token, session=self.session, poll_timeout=100, callback=self.process)
-
-        self._process_lock = asyncio.Lock(loop=self.loop)
+        self.manager = UpdateManager(token=self.token, session=self.session, callback=self.process)
 
 
     def run(self):
@@ -89,12 +83,10 @@ class NatsukoClient():
     async def process(self):
         print(f"Callback Called: {self}")
 
-        if not self._process_lock.locked():
-            with (await self._process_lock):
-                while self.manager.command_queue:
-                    _cmd = DotMap(self.manager.command_queue.pop(0))
-                    command = Event(self, _cmd)
-                    self.parse_command(command)
+        while self.manager.command_queue:
+            _cmd = DotMap(self.manager.command_queue.pop(0))
+            command = Event(self, _cmd)
+            self.parse_command(command)
 
 
     def parse_command(self, event):
@@ -146,23 +138,23 @@ class NatsukoClient():
 
     def api_gen(self, endpoint, **kwargs):
 
-        apiq = f"{self.API_URL}{endpoint}?"
-
-        for arg, value in kwargs.items():
-            if value != None:
-                apiq += f"{arg}={value}&"
-
-            elif isinstance(value, dict):
-                value = urllib.parse.quote_plus(value)
-                apiq += f"{arg}={value}&"
-
-        return apiq[:-1]
+        apiq = self.API_URL + endpoint
 
 
-    async def _api_send(self, apiq):
+        #for arg, value in kwargs.items():
+            #if value != None:
+               # apiq += f"{arg}={value}&"
+
+            #elif isinstance(value, dict):
+             #   value = urllib.parse.quote_plus(value)
+              #  apiq += f"{arg}={value}&"
+
+        return apiq, kwargs
+
+    async def _api_send(self, url, apiq):
         print(f"APISEND: {apiq}")
 
-        async with self.session.get(apiq) as resp:
+        async with self.session.get(url, params=apiq) as resp:
             content = await resp.json()
 
             if not content["ok"]:
@@ -193,17 +185,11 @@ class NatsukoClient():
                                                             reply from the user.
         """
 
-        message = urllib.parse.quote_plus(message)
-        apiq = self.api_gen("sendMessage",
-                            text=message,
-                            chat_id=chat_id,
-                            parse_mode=kwargs.get("parse_mode"),
-                            disable_web_page_preview=kwargs.get("disable_web_page_preview"),
-                            disable_notification=kwargs.get("disable_notification"),
-                            reply_to_message_id=kwargs.get("reply"),
-                            reply_markup=kwargs.get("reply_markup"))
+        endpoint = "sendMessage"
 
-        return await self._api_send(apiq)
+        url = self.API_URL + endpoint
+        args = {"chat_id": chat_id, "text": message, **kwargs}
+        return await self._api_send(url, args)
 
 
     async def forward_message(self, target_cid, source_cid,
@@ -251,35 +237,19 @@ class NatsukoClient():
                                                         force a reply from the user.
         """
 
-        caption = kwargs.get("caption")
-        disable_notification = kwargs.get("disable_notification")
-        reply = kwargs.get("reply")
-        reply_markup = kwargs.get("reply_markup")
-
+        endpoint = 'sendPhoto'
+        url = self.API_URL + endpoint
 
         if isinstance(photo, str):
             if photo.startswith('http'):
                 photo = urllib.parse.quote(photo)
 
-            apiq = self.api_gen("sendPhoto",
-                                chat_id=chat_id,
-                                photo=photo,
-                                caption=caption,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            return await self._api_send(apiq)
+            args = {"chat_id": chat_id, "photo": photo, **kwargs}
+            return await self._api_send(url, args)
 
         else:
-            apiq = self.api_gen("sendPhoto",
-                                chat_id=chat_id,
-                                caption=caption,
-                                disable_notification=disable_notification,
-                                reply_to_message_id=reply,
-                                reply_markup=reply_markup)
-
-            response = await self.session.post(apiq, data=dict(photo=photo))
+            args = {"chat_id": chat_id, **kwargs}
+            response = await self.session.post(url, data=dict(photo=photo), params=args)
             return response.json()
 
 
@@ -684,11 +654,11 @@ class NatsukoClient():
                                                             for video notes.
         """
 
-        apiq = self.api_gen("sendChatAction",
-                            chat_id=chat_id,
-                            action=action)
+        endpoint = "sendChatAction"
+        url = self.API_URL + endpoint
 
-        return await self._api_send(apiq)
+        args = {'chat_id': str(chat_id), 'action': action}
+        return await self._api_send(url, args)
 
 
     async def get_user_profile_photos(self, user_id, **kwargs):
