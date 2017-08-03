@@ -10,7 +10,6 @@ async def hello_command(event):
 
 @client.command("image")
 async def image_command(event):
-    await client.send_chat_action(event.message.chat.id, 'upload_photo')
     with open('testimage.jpg', 'rb') as f:
         photo = f.read()
 
