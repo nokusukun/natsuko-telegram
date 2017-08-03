@@ -8,6 +8,11 @@ client = NatsukoClient(settings.TOKEN)
 async def hello_command(event):
     await event.chat.send_message("dont hello me you nigglet.")
 
+    stickers = await client.get_sticker_set("machiko")
+    sticker = stickers.stickers[0]
+
+    await event.chat.send_sticker(sticker)
+
 @client.command("image")
 async def image_command(event):
     with open('testimage.jpg', 'rb') as f:

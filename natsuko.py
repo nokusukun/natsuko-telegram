@@ -5,7 +5,7 @@ import time
 import urllib.parse
 from dotmap import DotMap
 
-from models.types import Event, Message
+from models.types import Event, Message, StickerSet
 from models.errors import APIError
 import asyncio
 import aiohttp
@@ -418,13 +418,52 @@ class NatsukoClient():
             return response.json()
 
 
-    async def send_location(self, chat_id, long, lat, **kwargs):
-        """Use this method to send point on the map. On success, the sent Message is returned.
+    async def send_sticker(self, chat_id, sticker, **kwargs):
+        """Use this method to send .webp stickers. On success, the sent Message is returned.
         (Optional parameters are keyword arguments)
 
         Parameters              Type        Required    Description
         chat_id                 Int/Str     Yes         Unique identifier for the target chat or username of
                                                         the target channel (in the format @channelusername)
+        sticker                 File/Str    Yes
+        disable_notification    Boolean     Optional    Sends the message silently. Users will receive a
+                                                        notification with no sound.
+        reply_to_message_id	    Integer	    Optional	If the message is a reply, ID of the original message
+        reply_markup            Json        Optional    Additional interface options. A JSON-serialized object
+                                                        for an inline keyboard, custom reply keyboard,
+                                                        instructions to remove reply keyboard or to
+                                                        force a reply from the user.
+        """
+
+        endpoint = 'sendSticker'
+        url = self.API_URL + endpoint
+
+        args = {'chat_id': chat_id, "sticker": sticker, **kwargs}
+        return await self._api_send(url, args)
+
+
+    async def get_sticker_set(self, name):
+        """Use this method to get a sticker set. On success, a StickerSet object is returned.
+
+        Parameters              Type        Required    Description
+        name	                String	    Yes	        Name of the sticker set
+        """
+
+        endpoint = 'getStickerSet'
+        url = self.API_URL + endpoint
+
+        args = {"name": name}
+        resp = await self._api_send(url, args)
+
+        stickerset = StickerSet(self, resp)
+        return stickerset
+
+
+    async def send_location(self, chat_id, long, lat, **kwargs):
+        """Use this method to send point on the map. On success, the sent Message is returned.
+        (Optional parameters are keyword arguments)
+
+        Parameters              Type        Required    Description
         chat_id                 Int/Str     Yes         Unique identifier for the target chat or username of
                                                         the target channel (in the format @channelusername)
         latitude                Float       Yes         Latitude of location

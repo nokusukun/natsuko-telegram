@@ -142,6 +142,9 @@ class Chat(MasterType):
 
         return await self.client.send_message(self.id, message)
 
+    async def send_sticker(self, sticker, **kwargs):
+        return await self.client.send_sticker(self.id, sticker.file_id)
+
 
     async def reply_photo(self, photo):
         return await self.client.send_photo(self.id, photo)
@@ -211,6 +214,22 @@ class VideoNote(MasterType):
     def __init__(self, client, data):
         super().__init__(client, data)
 
+
+class Sticker(MasterType):
+
+    __slots__ = ['file_id', 'width', 'height', 'thumb', 'emoji', 'set_name', 'mask_position', 'file_size']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+
+
+class StickerSet(MasterType):
+
+    __slots__ = ['name', 'title', 'contains_masks', 'stickers']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
+        self.stickers = [Sticker(client, x) for x in self.stickers]
 
 
 class Contact(MasterType):
