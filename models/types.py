@@ -1,18 +1,42 @@
 
-from dotmap import DotMap
-from pprint import pprint
-
-
 
 class MasterType():
 
-    def __init__(self, client, data, data_map=None):
+    def __init__(self, client, data):
+
+        self.TYPE_MAP = {
+            'message':              ('message', Message),
+            'from':                 ('author', User),
+            'chat':                 ('chat', Chat),
+            'forward_from':         ('forward_from', User),
+            'forward_from_chat':    ('forward_from_chat', Chat),
+            'reply_to_message':     ('reply_to', Message),
+            'audio':                ('audio', Audio),
+            'document':             ('document', Document),
+            'game':                 ('game', Game),
+            'photo':                ('photo', PhotoSize),
+            'sticker':              None,
+            'video':                ('video', Video),
+            'voice':                ('voice', Voice),
+            'video_note':           ('video_note', VideoNote),
+            'new_chat_members':     None,
+            'contact':              ('contact', Contact),
+            'location':             ('location', Location),
+            'venue':                ('venue', Venue),
+            'new_chat_member':      ('new_chat_member', User),
+            'left_chat_member':     ('left_chat_member', User),
+            'new_chat_photo':       ('new_chat_photo', PhotoSize),
+            'pinned_message':       ('pinned_message', Message),
+            'invoice':              None,
+            'successful_payment':   None
+        }
+
 
         self.client = client
         self.data = data
 
         for attr in data:
-            self._add_attribute(attr, data_map)
+            self._add_attribute(attr)
 
 
     def __getattr__(self, attr):
@@ -21,35 +45,32 @@ class MasterType():
         else:
             return None
 
-    def _add_attribute(self, attr, data_map):
+    def _add_attribute(self, attr):
 
-        if data_map and attr in data_map:
-            # if map provides (attr, function) or (attr, class)
-            if isinstance(data_map[attr], tuple):
-                _attr = data_map[attr][0]
-
-                # if the map provides a class
-                if isinstance(data_map[attr][1], type):
-                    _cls = data_map[attr][1]
-                    _data = self.data.get(attr)
-                    self.__dict__[_attr] = _cls(self.client, _data)
-                else:
-                    _data = data_map[attr][1]
-                    self.__dict__[_attr] = _data
-
-            # if simply aliasing old_attr -> new_attr
-            elif isinstance(data_map[attr], str):
-                _attr = data_map[attr]
-                _data = self.data.get(attr)
-                self.__dict__[_attr] = _data
-
-        else:
+        if attr not in self.TYPE_MAP:
             self.__dict__[attr] = self.data.get(attr)
 
+        else:
+            _attr = self.TYPE_MAP[attr]
+            if isinstance(_attr, tuple):
+                _type = self.TYPE_MAP[attr][0]
+                _value = self.TYPE_MAP[attr][1]
+            else:
+                _type = attr
+                _value = self.TYPE_MAP[attr]
+
+            if isinstance(_value, type):
+                _data = self.data.get(attr)
+                _value = _value(self.client, _data)
+
+            self.__dict__[_type] = _value
+
+
     def __str__(self):
-    	d = ", ".join([f"{x}={self.__dict__[x]}" for x in self.__slots__ if x in self.__dict__])
-    	t = str(type(self))[8:-2]
-    	return f'<{t}>: ({d})'
+
+        d = ", ".join([f"{x}={self.__dict__[x]}" for x in self.__slots__ if x in self.__dict__])
+        t = str(type(self))[8:-2]
+        return f'<{t}>: ({d})'
 
 
 class Event(MasterType):
@@ -57,9 +78,7 @@ class Event(MasterType):
     __slots__ = ['message', 'update_id', 'chat', 'raw_event']
 
     def __init__(self, client, event):
-
-        data_map = {"message": ("message", Message)}
-        super().__init__(client, event, data_map)
+        super().__init__(client, event)
 
         self.chat = self.message.chat
         self.raw_event = event
@@ -78,10 +97,7 @@ class Message(MasterType):
 
 
     def __init__(self, client, data):
-
-        data_map = {"from": ("author", User),
-                    "chat": ("chat", Chat)}
-        super().__init__(client, data, data_map)
+        super().__init__(client, data)
 
         self.entities = [MessageEntity(client, self.text, e) for e in self.data.entities]
         self.id = self.message_id
@@ -165,6 +181,12 @@ class Document(MasterType):
     def __init__(self, client, data):
         super().__init__(client, data)
 
+class Game(MasterType):
+
+    __slots__ = ['title', 'description', 'photo', 'text', 'text_entities', 'animation']
+
+    def __init__(self, client, data):
+        super().__init__(client, data)
 
 class Video(MasterType):
 
