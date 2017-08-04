@@ -18,7 +18,7 @@ async def image_command(event):
     with open('testimage.jpg', 'rb') as f:
         photo = f.read()
 
-    await client.send_photo(event.message.chat.id, photo, caption="it's a test photo")
+    await event.chat.send_photo(photo, caption="it's a test photo")
 
 @client.command("info")
 async def chat_info(event):

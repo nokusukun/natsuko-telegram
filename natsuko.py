@@ -177,7 +177,7 @@ class NatsukoClient():
         return await self._api_send(url, args)
 
 
-    async def forward_message(self, target_cid, source_cid,
+    async def forward_message(self, source_cid, target_cid,
                     message_id, **kwargs):
         """
         Use this method to forward messages of any kind. On success, the sent Message is returned.

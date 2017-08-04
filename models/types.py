@@ -5,6 +5,8 @@ class MasterType():
     def __init__(self, client, data):
 
         self.TYPE_MAP = {
+            'user':                 ('user', User),
+
             'message':              ('message', Message),
             'from':                 ('author', User),
             'chat':                 ('chat', Chat),
@@ -139,15 +141,23 @@ class Chat(MasterType):
     async def send_message(self, message, **kwargs):
         # reply and reply_photo could probably be a single
         # method, with an if type()...I think
-
         return await self.client.send_message(self.id, message)
+
+    async def forward_message(self, chat_id, message_id, **kwargs):
+        return await self.client.forward_message(self.id, chat_id, message_id)
 
     async def send_sticker(self, sticker, **kwargs):
         return await self.client.send_sticker(self.id, sticker.file_id)
 
+    async def send_photo(self, photo, **kwargs):
+        return await self.client.send_photo(self.id, photo, **kwargs)
 
-    async def reply_photo(self, photo):
-        return await self.client.send_photo(self.id, photo)
+    async def get_member(self, user_id):
+        data = self.client.get_chat_member(self.id, user_id)
+        member = ChatMember(self.client, data)
+
+        return member
+
 
 
 
