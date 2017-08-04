@@ -11,6 +11,8 @@ async def hello_command(event):
     stickers = await client.get_sticker_set("machiko")
     sticker = stickers.stickers[0]
 
+    print(event.message.commands)
+
     await event.chat.send_sticker(sticker)
 
 @client.command("image")

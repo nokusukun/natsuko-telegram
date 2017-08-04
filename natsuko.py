@@ -91,10 +91,9 @@ class NatsukoClient():
 
     def parse_command(self, event):
 
-        for entity in event.message.entities:
-            if entity.is_command:
-                command = entity.text[1:]
-                print(f"Identified as Bot Command: {entity}")
+        for cmd in event.message.commands:
+                command = cmd.text[1:]
+                print(f"Identified as Bot Command: {cmd}")
 
                 if command in self.commands:
                     func = self.commands[command]["function"]

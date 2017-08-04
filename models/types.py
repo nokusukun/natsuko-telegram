@@ -86,6 +86,9 @@ class Event(MasterType):
 
 
 class Message(MasterType):
+    '''
+    This object represents a message.
+    '''
 
     __slots__ = ['message_id', 'author', 'date', 'chat', 'forward_from', 'forward_from_chat',
                  'forward_from_message_id', 'forward_date', 'reply_to_message', 'edit_date',
@@ -104,6 +107,23 @@ class Message(MasterType):
         self.id = self.message_id
 
 
+    @property
+    def mentions(self):
+        mentions = []
+        for entity in self.entities:
+            if entity.type == 'mention':
+                self._mentions.append(entity)
+        return mentions
+
+    @property
+    def commands(self):
+        commands = []
+        for entity in self.entities:
+            if entity.type == 'bot_command':
+                commands.append(entity)
+        return commands
+
+
     # could this be a generator?
     def get_entities(self, t):
         return [x.text for x in self.entities if x.type == t]
@@ -114,8 +134,11 @@ class Message(MasterType):
 
 
 class MessageEntity(MasterType):
+    '''
+    This object represents one special entity in a text message. For example, hashtags, usernames, URLs, etc.
+    '''
 
-    __slots__ = ['text', 'type', 'offset', 'length', 'bot_command', 'clean_text']
+    __slots__ = ['text', 'type', 'offset', 'length', 'clean_text']
 
     def __init__(self, client, text, data):
         super().__init__(client, data)
@@ -123,12 +146,11 @@ class MessageEntity(MasterType):
         self.text = text[self.offset: self.offset + self.length]
         self.clean_text = self.text[1:]
 
-    @property
-    def is_command(self):
-        return self.type == 'bot_command'
-
 
 class Chat(MasterType):
+    '''
+    This object represents a chat.
+    '''
 
     __slots__ = ['id', 'type', 'title', 'username', 'first_name', 'last_name',
                  'all_members_are_administrators', 'photo', 'description',
@@ -162,6 +184,9 @@ class Chat(MasterType):
 
 
 class User(MasterType):
+    '''
+    This object represents a Telegram user or bot.
+    '''
 
     __slots__ = ['id', 'first_name', 'last_name', 'username', 'language_code']
 
@@ -170,6 +195,9 @@ class User(MasterType):
 
 
 class PhotoSize(MasterType):
+    '''
+    This object represents one size of a photo or a file / sticker thumbnail.
+    '''
 
     __slots__ = ['id', 'width', 'height', 'file_size']
 
@@ -178,6 +206,9 @@ class PhotoSize(MasterType):
 
 
 class Audio(MasterType):
+    '''
+    This object represents an audio file to be treated as music by the Telegram clients.
+    '''
 
     __slots__ = ['file_id', 'duration', 'performer', 'title', 'mime_type', 'file_size']
 
@@ -187,6 +218,9 @@ class Audio(MasterType):
 
 
 class Document(MasterType):
+    '''
+    This object represents a general file (as opposed to photos, voice messages and audio files).
+    '''
 
     __slots__ = ['file_id', 'thumb', 'file_name', 'mime_type', 'file_size']
 
@@ -194,6 +228,9 @@ class Document(MasterType):
         super().__init__(client, data)
 
 class Game(MasterType):
+    '''
+    This object represents a game. Use BotFather to create and edit games, their short names will act as unique identifiers.
+    '''
 
     __slots__ = ['title', 'description', 'photo', 'text', 'text_entities', 'animation']
 
@@ -201,6 +238,9 @@ class Game(MasterType):
         super().__init__(client, data)
 
 class Video(MasterType):
+    '''
+    This object represents a video file.
+    '''
 
     __slots__ = ['file_id', 'width', 'height', 'duration', 'thumb', 'mime_type', 'file_size']
 
@@ -209,6 +249,9 @@ class Video(MasterType):
 
 
 class Voice(MasterType):
+    '''
+    This object represents a voice note.
+    '''
 
     __slots__ = ['file_id', 'duration', 'mime_type', 'file_size']
 
@@ -218,6 +261,9 @@ class Voice(MasterType):
 
 
 class VideoNote(MasterType):
+    '''
+    This object represents a video message (available in Telegram apps as of v.4.0).
+    '''
 
     __slots__ = ['file_id', 'length', 'duration', 'thumb', 'file_size']
 
@@ -226,6 +272,9 @@ class VideoNote(MasterType):
 
 
 class Sticker(MasterType):
+    '''
+    This object represents a sticker.
+    '''
 
     __slots__ = ['file_id', 'width', 'height', 'thumb', 'emoji', 'set_name', 'mask_position', 'file_size']
 
@@ -234,6 +283,9 @@ class Sticker(MasterType):
 
 
 class StickerSet(MasterType):
+    '''
+    This object represents a sticker set.
+    '''
 
     __slots__ = ['name', 'title', 'contains_masks', 'stickers']
 
@@ -243,6 +295,9 @@ class StickerSet(MasterType):
 
 
 class Contact(MasterType):
+    '''
+    This object represents a phone contact.
+    '''
 
     __slots__ = ['phone_number', 'first_name', 'last_name', 'user_id']
 
@@ -252,6 +307,9 @@ class Contact(MasterType):
 
 
 class Location(MasterType):
+    '''
+    This object represents a point on the map.
+    '''
 
     __slots__ = ['longitude', 'latitude']
 
@@ -261,6 +319,9 @@ class Location(MasterType):
 
 
 class Venue(MasterType):
+    '''
+    This object represents a venue.
+    '''
 
     __slots__ = ['location', 'title', 'address', 'foursquare_Id']
 
@@ -270,6 +331,9 @@ class Venue(MasterType):
 
 
 class UserProfilePhotos(MasterType):
+    '''
+    This object represent a user's profile pictures.
+    '''
 
     __slots__ = ['total_count', 'photos']
 
@@ -278,6 +342,12 @@ class UserProfilePhotos(MasterType):
 
 
 class File(MasterType):
+    '''
+    This object represents a file ready to be downloaded.
+    The file can be downloaded via the link https://api.telegram.org/file/bot<token>/<file_path>.
+    It is guaranteed that the link will be valid for at least 1 hour. When the link expires,
+    a new one can be requested by calling getFile.
+    '''
 
     __slots__ = ['file_id', 'file_size', 'file_path']
 
@@ -286,6 +356,7 @@ class File(MasterType):
 
 
 class ReplyKeyboardMarkup(MasterType):
+    '''This object represents a custom keyboard with reply options'''
 
     __slots__ = ['keyboard', 'resize_keyboard', 'one_time_keyboard', 'selective']
 
@@ -295,6 +366,11 @@ class ReplyKeyboardMarkup(MasterType):
 
 
 class KeyboardButton(MasterType):
+    '''
+    This object represents one button of the reply keyboard.
+    For simple text buttons String can be used instead of this object to specify text of the button.
+    Optional fields are mutually exclusive.
+    '''
 
     __slots__ = ['text', 'request_contact', 'request_location']
 
@@ -304,6 +380,12 @@ class KeyboardButton(MasterType):
 
 
 class ReplyKeyboardRemove(MasterType):
+    '''
+    Upon receiving a message with this object,
+    Telegram clients will remove the current custom keyboard and display the default letter-keyboard.
+    By default, custom keyboards are displayed until a new keyboard is sent by a bot.
+    An exception is made for one-time keyboards that are hidden immediately after the user presses a button.
+    '''
 
     __slots__ = ['remove_keyboard', 'selective']
 
@@ -312,6 +394,9 @@ class ReplyKeyboardRemove(MasterType):
 
 
 class InlineKeyboardMarkup(MasterType):
+    '''
+    This object represents an inline keyboard that appears right next to the message it belongs to.
+    '''
 
     __slots__ = ['inline_keyboard']
 
@@ -320,6 +405,9 @@ class InlineKeyboardMarkup(MasterType):
 
 
 class InlineKeyboardButton(MasterType):
+    '''
+    This object represents one button of an inline keyboard. You must use exactly one of the optional fields.
+    '''
 
     __slots__ = ['text', 'url', 'callback_data', 'switch_inline_query',
                  'switch_inline_query_current_chat', 'callback_game', 'pay']
@@ -329,6 +417,12 @@ class InlineKeyboardButton(MasterType):
 
 
 class CallbackQuery(MasterType):
+    '''
+    This object represents an incoming callback query from a callback button in an inline keyboard.
+    If the button that originated the query was attached to a message sent by the bot, the field message will be present.
+    If the button was attached to a message sent via the bot (in inline mode), the field inline_message_id will be present.
+    Exactly one of the fields data or game_short_name will be present.
+    '''
 
     __slots__ = ['id', 'from', 'message', 'inline_message_id', 'chat_instance',
                  'data', 'game_short_name']
@@ -338,6 +432,11 @@ class CallbackQuery(MasterType):
 
 
 class ForcedReply(MasterType):
+    '''
+    Upon receiving a message with this object,
+    Telegram clients will display a reply interface to the user (act as if the user has selected the bot‘s message and tapped ’Reply').
+    This can be extremely useful if you want to create user-friendly step-by-step interfaces without having to sacrifice privacy mode.
+    '''
 
     __slots__ = ['forced_reply', 'selective']
 
@@ -346,6 +445,9 @@ class ForcedReply(MasterType):
 
 
 class ChatPhoto(MasterType):
+    '''
+    This object represents a chat photo.
+    '''
 
     __slots__ = ['small_file_id', 'big_file_id']
 
@@ -354,6 +456,9 @@ class ChatPhoto(MasterType):
 
 
 class ChatMember(MasterType):
+    '''
+    This object contains information about one member of a chat.
+    '''
 
     __slots__ = ['user', 'status', 'until_date', 'can_be_edited', 'can_change_photo',
                  'can_post_messages', 'can_edit_messages', 'can_invite_users', 'can_restrict_mmebers',
@@ -365,6 +470,9 @@ class ChatMember(MasterType):
 
 
 class ResponseParameters(MasterType):
+    '''
+    Contains information about why a request was unsuccessfull.
+    '''
 
     __slots__ = ['migrate_to_chat_id', 'reply_after']
 
@@ -373,6 +481,10 @@ class ResponseParameters(MasterType):
 
 
 class InputFile(MasterType):
+    '''
+    This object represents the contents of a file to be uploaded.
+    Must be posted using multipart/form-data in the usual way that files are uploaded via the browser.
+    '''
 
     __slots__ = ['chat_id', 'text', 'parse_mode', 'disable_web_page_preview',
                  'disable_notification', 'reply_to_message_id', 'reply_markup']
